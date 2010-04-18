@@ -16,6 +16,9 @@ int main() {
 }
 
 double pi_a(int n) { /* wzor Eulera na liczbe pi ________________________*/
+    	/*
+	   n	- ilosc elementow szeregu
+	*/
     double ret = 0.0;
     int i = 1;
     for(; i<=n; ++i) {
@@ -25,6 +28,9 @@ double pi_a(int n) { /* wzor Eulera na liczbe pi ________________________*/
 }
 
 double pi_b(int n) { /* wzor Wallisa na liczbe pi _______________________*/
+    	/*
+	   n	- ilosc elementow szeregu
+	*/
     double ret = 2.0; /* zaczynam od 2 by nie mnozyc na samym koncu */
     int even = -1,
 	i = 1;

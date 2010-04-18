@@ -1,7 +1,7 @@
 CC	= gcc
 CFLAGS	= -ansi -pedantic -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 LDFLAGS	= -O2 -lm
-SRC	= b1.c
+SRC	= b1.c b2.c
 PKGNAME	= GadekKonrad-jtp1-AB.tgz
 
 clean:
