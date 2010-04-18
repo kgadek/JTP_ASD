@@ -80,18 +80,18 @@ int main() {
 	char t[sizeof(long double)];
     } zp;
     /* poczatek bloku informacyjnego dla liczb calkowitych i typu char */
-    INTTEST(short int,9,"%d",_short,-11);
-    INTTEST(unsigned short int,18,"%d",_ushort,12);
-    INTTEST(int,3,"%d",_int,-14);
-    INTTEST(unsigned int,12,"%d",_uint,14);
-    INTTEST(long int,8,"%ld",_long,-17);
-    INTTEST(unsigned long int,17,"%ld",_ulong,17);
-    INTTEST(char,4,"%d",_char,-21);
-    INTTEST(unsigned char,13,"%d",_uchar,23);
+/*     INTTEST(short int,9,"%d",_short,-11); */
+/*     INTTEST(unsigned short int,18,"%d",_ushort,12); */
+/*     INTTEST(int,3,"%d",_int,-14); */
+/*     INTTEST(unsigned int,12,"%d",_uint,14); */
+/*     INTTEST(long int,8,"%ld",_long,-17); */
+/*     INTTEST(unsigned long int,17,"%ld",_ulong,17); */
+/*     INTTEST(char,4,"%d",_char,-21); */
+/*     INTTEST(unsigned char,13,"%d",_uchar,23); */
     /* poczatek bloku informacyjnego dla liczb zmiennoprzecinkowych */
-    FLOATTEST(float,5,"%f",zp._f,1.123f);
-    FLOATTEST(double,6,"%f",zp._d,2.246f);
-    FLOATTEST(long double,11,"%Lf",zp._ld,4.492f);
+/*     FLOATTEST(float,5,"%f",zp._f,-1.5f); */
+     FLOATTEST(double,6,"%f",zp._d,123.456f);
+/*     FLOATTEST(long double,11,"%Lf",zp._ld,4.492f); */
     return 0;
 }
 
