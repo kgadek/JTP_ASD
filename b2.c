@@ -2,23 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define _DBG 1
-
 void fill(double*, int); /* wypelnij tablice losowymi wartosciami
 			    z przedzialu [-10.0, 10.0) */
 void sort(double*, int); /* posortuj tablice algorytmen Insertion Sort*/
 
 int main() {
     double xx[100];
-#ifdef _DBG
-    int i;
-#endif
     fill(xx,100);
     sort(xx,100);
-#ifdef _DBG
-    for(i=0;i<100;++i)
-	printf("%.1f\n",xx[i]);
-#endif
     return 0;
 }
 
