@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	srand((unsigned int)time(NULL));
+	fprintf(outf,"%d\n",N);
 	for(i=0;i<N;++i)
 		fprintf(outf,"(%.4f,%.4f,%.4f)\n",rr(),rr(),rr());
 	fclose(outf);

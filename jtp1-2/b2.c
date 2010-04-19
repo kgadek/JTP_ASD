@@ -4,6 +4,8 @@
 FILE *outf;
 
 int main(int argc, char *argv[]) {
+	int i,N;
+	double a,b,c;
 	if(argc!=2) {
 		fprintf(stderr,"Podano zla ilosc parametrow!\n\n"\
 				\
@@ -21,6 +23,11 @@ int main(int argc, char *argv[]) {
 					"\t%s nazwa_pliku\n",\
 				argv[0]);
 		exit(1);
+	}
+	fscanf(outf,"%d",&N);
+	for(i=0;i<N;++i) {
+		fscanf(outf," (%lf,%lf,%lf) ",&a,&b,&c);
+		/* printf("Wczytalem %f %f %f\n",a,b,c); */
 	}
 	fclose(outf);
 	return 0;

@@ -5,7 +5,7 @@ SRC	= b1.c b2.c b3.c
 PKGNAME	= GadekKonrad-jtp1-1.tgz
 
 clean:
-	rm -f *.o b1.o b1 b2.o b2 b3.o b3 $(PKGNAME)
+	rm -f *.o b1.o b1 b2.o b2 b3.o b3 $(PKGNAME) *~
 
 b1: b1.c
 	$(CC) $(CFLAGS) $(LDFLAGS) b1.c -o b1
