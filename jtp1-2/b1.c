@@ -11,6 +11,7 @@ double rr() { /* losuj liczbe z przedzialu [-30,30] */
 }
 
 int main(int argc, char *argv[]) {
+	int i;
 	if(argc!=3) {
 		fprintf(stderr,"Podano zla ilosc parametrow!\n\n"\
 				\
@@ -40,6 +41,8 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	srand((unsigned int)time(NULL));
+	for(i=0;i<N;++i)
+		fprintf(outf,"(%2.4f,%2.4f,%2.4f)\n",rr(),rr(),rr());
 	fclose(outf);
 	return 0;
 }
