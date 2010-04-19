@@ -72,7 +72,7 @@ int main() {
 		float _f;
 		double _d;
 		long double _ld;
-		char t[sizeof(long double)];
+		char t[sizeof(long double)]; /* long double jest najwieksze */
 	} un;
 	/* poczatek bloku informacyjnego dla liczb calkowitych i typu char */
 	TEST(short int,9,"%d",un._short,-11);
