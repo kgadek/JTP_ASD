@@ -48,13 +48,13 @@
 	for(x=SCREENSIZE;x>_l;--x) printf("_");\
 	printf("\n\t* rozmiar:\t\t\t%d B\n"\
 	"\t* przykladowa wartosc:\t\t" _fmt "\n"\
-	"\t* binarnie (" BINDISPN "):\t\t[",\
+	"\t* binarnie (" BINDISPN "):\t\t",\
 	sizeof(_typ),_n);\
 	LOOP(_typ)\
 	printf("%d%d%d%d%d%d%d%d",(un.t[x]&1<<7)?1:0,(un.t[x]&1<<6)?1:0,\
 		(un.t[x]&1<<5)?1:0,(un.t[x]&1<<4)?1:0,(un.t[x]&1<<3)?1:0,\
 		(un.t[x]&1<<2)?1:0,(un.t[x]&1<<1)?1:0,(un.t[x]&1)?1:0);\
-	printf("]\n");
+	printf("\n");
 
 int main() {
 	/* zmienne pomocnicza */
