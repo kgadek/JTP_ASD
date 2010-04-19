@@ -18,21 +18,20 @@
 */
 #define BINDISP 1
 
-/* Bardzo brzydkie makra do obslugi liczb zmiennoprzecinkowych.
+/* Bardzo brzydkie makro (makra) testujace typy danych.
    Wywolanie:
 		TEST(_typ,_l,_fmt,_n,_v)
    gdzie:
 		_typ	- nazwa typu
 		_l		- dlugosc nazwy typu
-		_fmt	- format funkcji printf
+		_fmt	- format dla funkcji printf
 		_n		- nazwa zmiennej tymczasowo przechowujacej wartosc.
-				  Z zalozenia zmienna ta jest w unii un, ktora
-				  jest czyszczona w kazdym ,,wywolaniu" makra, by
-				  uzyskac czysta postac binarna.
 		_v		- przykladowa wartosc
    Makro wykorzystuje zmienna x, ktora powinna byc dostepna w czasie
    wywolania makra, a takze stala SCREENSIZE. Wyswietlanie wartosci
    binarnej zalezy od wartosci zmiennej BINDISP (patrz: wyzej).
+   Zawartosc unii un jest za kazdym razem czyszczona by nie dopuscic
+   do wyswietlenia blednej postaci binarnej.
 */ 
 #if BINDISP==0
 #define LOOP(_typ) for(x=0;x<(signed)sizeof(_typ);++x)
