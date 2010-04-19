@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	}
 	srand((unsigned int)time(NULL));
 	for(i=0;i<N;++i)
-		fprintf(outf,"(%2.4f,%2.4f,%2.4f)\n",rr(),rr(),rr());
+		fprintf(outf,"(%.4f,%.4f,%.4f)\n",rr(),rr(),rr());
 	fclose(outf);
 	return 0;
 }
