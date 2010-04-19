@@ -25,7 +25,7 @@
 		_typ	- nazwa typu
 		_l		- dlugosc nazwy typu
 		_fmt	- format dla funkcji printf
-		_n		- nazwa zmiennej tymczasowo przechowujacej wartosc.
+		_n		- nazwa zmiennej tymczasowo przechowujacej wartosc
 		_v		- przykladowa wartosc
    Makro wykorzystuje zmienna x, ktora powinna byc dostepna w czasie
    wywolania makra, a takze stala SCREENSIZE. Wyswietlanie wartosci
