@@ -1,0 +1,14 @@
+Zadanie testowe z ASD
+
+Celem zadania jest zaznajomienie się Państwa z systemem arbitrażowym. 
+
+Zadanie polega na policzeniu ilości inwersji w ciągu liczb wczytanym ze standardowego wejścia. Wartości są typu int w zapisie dziesiętnym, oddzielone dowolnymi znakami białej spacji. Program powinien wypisać na standardowe wyjście ilość inwersji, to jest takich par liczb, w których wartość większa poprzedza mniejszą, przy czym liczby z pary nie muszą ze sobą sąsiadować. 
+
+Przykład: Ilość inwersji w ciągu (1,2,3) wynosi 0, zaś w ciągu (3,1,2) wynosi 2. 
+
+Jeśli ciąg wejściowy jest błędny (zawiera błędny format liczby), program powinien wypisać na standardowe wyjście wartość -1. 
+
+Życzymy powodzenia! 
+
+Paweł Pietras 
+Piotr Pisarek
