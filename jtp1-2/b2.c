@@ -2,11 +2,15 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define MAX(a,b) ((a)>(b)?(a):(b))
+
 FILE *outf;
-	double *x,*y,*z, **tab;
+double *x,*y,*z,**tab,max,tmp;
 
 double odl(int id_1, int id_2) {
-	return sqrt((x[id_1]-x[id_2])*(x[id_1]-x[id_2])+(y[id_1]-y[id_2])*(y[id_1]-y[id_2])+(z[id_1]-z[id_2])*(z[id_1]-z[id_2]));
+	tmp = sqrt((x[id_1]-x[id_2])*(x[id_1]-x[id_2])+(y[id_1]-y[id_2])*(y[id_1]-y[id_2])+(z[id_1]-z[id_2])*(z[id_1]-z[id_2]));
+	max=MAX(max,tmp);
+	return tmp;
 }
 
 int main(int argc, char *argv[]) {
@@ -52,9 +56,12 @@ int main(int argc, char *argv[]) {
 		fscanf(outf," (%lf,%lf,%lf) ",x+i,y+i,z+i);
 	}
 	for(i=0;i<N;++i) {
-		for(j=0;j<N;++j) {
+		for(j=i+1;j<N;++j) {
+			tab[i][j]=tab[j][i]=odl(i,j);
 		}
 	}
+	/*dbgfor(i=0;i<N;++i)for(j=0;j<N;++j) printf("[%d][%d]=%f\n",i,j,tab[i][j]);*/
+	printf("%f\n",max);
 	fclose(outf);
 	free(x);
 	free(y);
