@@ -53,6 +53,21 @@ int main(int argc, char *argv[]) {
 	}
 	for(i=0;i<N;++i) {
 		(tab[i]) = (double*)calloc((size_t)N,(size_t)sizeof(double));
+		if(tab[i]==NULL) {
+			fprintf(stderr,"Blad alokacji pamieci!\n");
+			for(j=0;j<i;++j)
+				free(tab[j]);
+			if(x)
+				free(x);
+			if(y)
+				free(y);
+			if(z)
+				free(z);
+			if(tab)
+				free(tab);
+			fclose(outf);
+			exit(1);
+		}
 		fscanf(outf," (%lf,%lf,%lf) ",x+i,y+i,z+i);
 	}
 	for(i=0;i<N;++i) {
@@ -60,7 +75,6 @@ int main(int argc, char *argv[]) {
 			tab[i][j]=tab[j][i]=odl(i,j);
 		}
 	}
-	/*dbgfor(i=0;i<N;++i)for(j=0;j<N;++j) printf("[%d][%d]=%f\n",i,j,tab[i][j]);*/
 	printf("%f\n",max);
 	fclose(outf);
 	free(x);
