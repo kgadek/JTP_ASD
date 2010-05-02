@@ -1,11 +1,11 @@
 CC	= gcc
 CFLAGS	= -ansi -pedantic -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 LDFLAGS	= -O2 -lm
-SRC	= b1.c b2.c b3.c
+SRC	= b1.c b2.c b3.c b4.c
 PKGNAME	= GadekKonrad-jtp1-1.tgz
 
 clean:
-	rm -f *.o b1.o b1 b2.o b2 b3.o b3 $(PKGNAME) outf *~
+	rm -f *.o b1.o b1 b2.o b2 b3.o b3 b4.o b4 $(PKGNAME) outf *~
 
 b1: b1.c
 	$(CC) $(CFLAGS) $(LDFLAGS) b1.c -o b1
