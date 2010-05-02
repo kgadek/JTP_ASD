@@ -2,7 +2,7 @@ CC	= gcc
 CFLAGS	= -ansi -pedantic -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 LDFLAGS	= -O2 -lm
 SRC	= b1.c b2.c b3.c b4.c
-PKGNAME	= GadekKonrad-jtp1-1.tgz
+PKGNAME	= GadekKonrad-jtp1-2.tgz
 
 clean:
 	rm -f *.o b1.o b1 b2.o b2 b3.o b3 b4.o b4 $(PKGNAME) outf *~
@@ -21,4 +21,4 @@ b4: b4.c
 
 pkg: $(SRC)
 	rm -f $(PKGNAME)
-	tar -zcvf $(PKGNAME) $(SRC)
+	tar -zcf $(PKGNAME) $(SRC)
