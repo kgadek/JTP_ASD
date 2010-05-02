@@ -2,29 +2,34 @@
 #include <stdlib.h>
 #include <math.h>
 
+/* ==========[ makra ]========== */
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
+/* ==========[ zmienne globalne ]========== */
 FILE *outf;
 double *x,*y,*z,**tab,max,tmp;
 
+/* ==========[ definicje funkcji ]========== */
 double odl(int id_1, int id_2) {
 	tmp = sqrt((x[id_1]-x[id_2])*(x[id_1]-x[id_2])+(y[id_1]-y[id_2])*(y[id_1]-y[id_2])+(z[id_1]-z[id_2])*(z[id_1]-z[id_2]));
 	max=MAX(max,tmp);
 	return tmp;
 }
 
+
+/* ==========[ funkcja main ]========== */
 int main(int argc, char *argv[]) {
 	int i,j,N;
-	if(argc!=2) {
+	/* sprawdzanie przekazanych argumentow */
+	if(argc!=2) {		/* zla ilosc argumentow */
 		fprintf(stderr,"Podano zla ilosc parametrow!\n\n"\
-				\
 				"Wywolanie programu:\n"\
 					"\t%s nazwa_pliku\n",\
 				argv[0]);
 		exit(1);
 	}
 	outf = fopen(argv[1],"r");
-	if(outf == NULL) {
+	if(outf == NULL) {		/* blad dostepu do pliku */
 		fprintf(stderr,"Blad pliku! Nie mozna otworzyc pliku do czytania. "\
 				"Sprobuj podac\ninna nazwe pliku.\n\n"\
 				\
@@ -33,11 +38,15 @@ int main(int argc, char *argv[]) {
 				argv[0]);
 		exit(1);
 	}
-	fscanf(outf,"%d",&N);
+
+	/* czesc wlasciwa programu */
+	fscanf(outf,"%d",&N);		/* wczytanie pierwszej linii */
+		/* alokacja pamieci---------- */
 	x = (double *)malloc((unsigned int)N*sizeof(double));
 	y = (double *)malloc((unsigned int)N*sizeof(double));
 	z = (double *)malloc((unsigned int)N*sizeof(double));
 	tab = (double **)malloc((unsigned int)N*sizeof(double*));
+		/* obsluga bledow alokacji pamieci---------- */
 	if(x==NULL || y==NULL|| z==NULL || tab==NULL) {
 		fprintf(stderr,"Blad alokacji pamieci!\n");
 		if(x)
@@ -51,6 +60,9 @@ int main(int argc, char *argv[]) {
 		fclose(outf);
 		exit(1);
 	}
+		/* * ciag dalszy alokacji - alokacja tablicy  dwuwymiarowej
+		   * obsluga bledow
+		   * wczytywanie wartosci z pliku */
 	for(i=0;i<N;++i) {
 		(tab[i]) = (double*)calloc((size_t)N,(size_t)sizeof(double));
 		if(tab[i]==NULL) {
@@ -70,12 +82,15 @@ int main(int argc, char *argv[]) {
 		}
 		fscanf(outf," (%lf,%lf,%lf) ",x+i,y+i,z+i);
 	}
+	/* wyznaczenie odleglosci miedzy punktami */
 	for(i=0;i<N;++i) {
-		for(j=i+1;j<N;++j) {
+		for(j=i+1;j<N;++j) {		/* mala optymalizacja */
 			tab[i][j]=tab[j][i]=odl(i,j);
 		}
 	}
-	printf("%f\n",max);
+	printf("%f\n",max);		/* wypisanie wyniku */
+
+	/* zamkniecie pliku, czyszczenie pamieci, zakonczenie programu */
 	fclose(outf);
 	free(x);
 	free(y);
