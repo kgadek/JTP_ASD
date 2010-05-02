@@ -7,13 +7,12 @@
 
 /* ==========[ zmienne globalne ]========== */
 FILE *outf;
-double *x,*y,*z,**tab,max,tmp;
+double *x,*y,*z,**tab,tmp;
+int max;
 
 /* ==========[ definicje funkcji ]========== */
 double odl(int id_1, int id_2) {
-	tmp = sqrt((x[id_1]-x[id_2])*(x[id_1]-x[id_2])+(y[id_1]-y[id_2])*(y[id_1]-y[id_2])+(z[id_1]-z[id_2])*(z[id_1]-z[id_2]));
-	max=MAX(max,tmp);
-	return tmp;
+	return sqrt((x[id_1]-x[id_2])*(x[id_1]-x[id_2])+(y[id_1]-y[id_2])*(y[id_1]-y[id_2])+(z[id_1]-z[id_2])*(z[id_1]-z[id_2]));
 }
 
 
@@ -88,7 +87,14 @@ int main(int argc, char *argv[]) {
 			tab[i][j]=tab[j][i]=odl(i,j);
 		}
 	}
-	printf("%f\n",max);		/* wypisanie wyniku */
+	for(i=max=0;i<N;++i) {
+		for(j=1;j<N;++j) {
+			tab[i][0] += tab[i][j];
+		}
+		if(tab[i][0] > tab[max][0])
+			max = i;
+	}
+	printf("(%f,%f,%f)\n",x[max],y[max],z[max]);		/* wypisanie wyniku */
 
 	/* zamkniecie pliku, czyszczenie pamieci, zakonczenie programu */
 	fclose(outf);
