@@ -16,6 +16,9 @@ b2: b2.c
 b3: b3.c
 	$(CC) $(CFLAGS) $(LDFLAGS) b3.c -o b3
 
+b4: b4.c
+	$(CC) $(CFLAGS) $(LDFLAGS) b4.c -o b4
+
 pkg: $(SRC)
 	rm -f $(PKGNAME)
 	tar -zcvf $(PKGNAME) $(SRC)
