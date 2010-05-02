@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 				for(j=0;j<=tmp;++j)
 					printf(" ");
 			}
-			czytaj(fn,wyr,&gcc,&gwc,&gcc,&gzc);
+			czytaj(fn,wyr,&glc,&gwc,&gcc,&gzc);
 			fclose(fn);
 		}
 	}
@@ -84,19 +84,18 @@ void czytaj(FILE *fn, int wyr, int *glc, int *gwc, int *gcc,int *gzc) {
 	int lc,wc,cc,zc,c,word;
 	lc = wc = cc = zc = word = 0;
 	while( (c = fgetc(fn)) !=  EOF) {
+		++cc;
 		if(c==wyr)
 			++zc;
 		switch(c) {
 			case 10:		/* \n */
 				++lc;
-				++cc;
 				word = 0;
 				break;
 			case 13:		/* \r 		 uwaga: nie zadziala dobrze na MacOS */
 				break;
 			case 11:		/* tab */
 			case 32:		/* spacja */
-				++cc;
 				word = 0;
 				break;
 			default:
@@ -104,7 +103,6 @@ void czytaj(FILE *fn, int wyr, int *glc, int *gwc, int *gcc,int *gzc) {
 					word = 1;
 					++wc;
 				}
-				++cc;
 		}
 	}
 	printf("%5d %5d %5d",lc,wc,cc);
