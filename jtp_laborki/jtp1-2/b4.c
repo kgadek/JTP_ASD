@@ -4,6 +4,10 @@
 
 #define NaC -1000		/* duża liczba ujemna - uniknięcie ew. problemów z
 				   signed char */
+#define EXECPARAM "Wywolanie programu:\n\t"\
+	"%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"\
+	"Opcje:\n\t-f X\t\t- zlicz ilosc wystapien znaku X\n",\
+	argv[0]
 
 /* ==========[ deklaracja funkcji liczacej znaki ]========== */
 void czytaj(FILE *, int, int *, int *, int *, int *);
@@ -34,35 +38,20 @@ int main(int argc, char *argv[])
 
 	if (strcmp("-f", argv[i]) == 0) {	/* jesli znaleziono opcje -f ... */
 	    if (wyr != NaC) {	/* ... ale juz wczesniej wczytana */
-		fprintf(stderr, "Opcje -f podano wielokrotnie\n"
-			"Wywolanie programu:\n\t"
-			"%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"
-			"Opcje:\n\t"
-			"-f X\t\t- zlicz ilosc wystapien znaku X\n",
-			argv[0]);
+		fprintf(stderr, "Opcje -f podano wielokrotnie\n" EXECPARAM);
 		exit(1);
 	    }
 	    if (i + 1 < argc) {	/* ... przetworz argument -f */
 		if (argv[i + 1][1] != 0) {	/* jesli podano string a nie znak  */
 		    fprintf(stderr,
-			    "Po opcji -f podano ciag znakow a nie znak\n"
-			    "Wywolanie programu:\n\t"
-			    "%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"
-			    "Opcje:\n\t"
-			    "-f X\t\t- zlicz ilosc wystapien znaku X\n",
-			    argv[0]);
+			    "Po opcji -f podano ciag znakow a nie znak\n" EXECPARAM);
 		    exit(1);
 		}
 		wyr = argv[i + 1][0];
 		++i;
 		continue;
 	    } else {		/* ... popros o podanie argumentu -f */
-		fprintf(stderr, "Nie podano znaku po opcji -f\n"
-			"Wywolanie programu:\n\t"
-			"%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"
-			"Opcje:\n\t"
-			"-f X\t\t- zlicz ilosc wystapien znaku X\n",
-			argv[0]);
+		fprintf(stderr, "Nie podano znaku po opcji -f\n" EXECPARAM);
 		exit(1);
 	    }
 	}
@@ -78,12 +67,7 @@ int main(int argc, char *argv[])
 
     /* sprawdzenie, czy podano jakikolwiek plik wejsciowy */
     if (fcnt < 1) {
-	fprintf(stderr, "Nie podano zadnych plikow wejsciowych.\n\n"
-		"Wywolanie programu:\n\t"
-		"%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"
-		"Opcje:\n\t"
-		"-f X\t\t- zlicz ilosc wystapien znaku X\n", argv[0]);
-	exit(1);
+	fprintf(stderr, "Nie podano zadnych plikow wejsciowych.\n" EXECPARAM);
     }
     sh = fcnt;			/* wpisanie do sh ilosci rozpatrywanych plikow wejsciowych */
 
