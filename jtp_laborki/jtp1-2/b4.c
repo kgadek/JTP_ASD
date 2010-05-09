@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define NaC -1000		/* duża liczba ujemna - uniknięcie ew. problemów z
+				   signed char */
+
 /* ==========[ deklaracja funkcji liczacej znaki ]========== */
 void czytaj(FILE *, int, int *, int *, int *, int *);
 
@@ -22,7 +25,7 @@ int main(int argc, char *argv[])
     /* inicjacja zmiennych */
     gwc = glc = gzc = fcnt = gcc = 0;
     maxfn = 5;			/* 5 - dlugosc slowka total */
-    wyr = -1;
+    wyr = NaC;
 
 
     /* wstepne czytanie opcji - odnalezienie opcji -f, zliczenie plikow (fcnt),
@@ -30,7 +33,7 @@ int main(int argc, char *argv[])
     for (i = 1; i < argc; ++i) {
 
 	if (strcmp("-f", argv[i]) == 0) {	/* jesli znaleziono opcje -f ... */
-	    if (wyr != -1) {	/* ... ale juz wczesniej wczytana */
+	    if (wyr != NaC) {	/* ... ale juz wczesniej wczytana */
 		fprintf(stderr, "Opcje -f podano wielokrotnie\n"
 			"Wywolanie programu:\n\t"
 			"%s plik1 [plik2] ... [plikM] [-f znak] [plikN] ...\n"
@@ -125,7 +128,7 @@ int main(int argc, char *argv[])
 	    printf(" ");
 
 	printf("%5d %5d %5d", glc, gwc, gcc);
-	if (wyr != -1)
+	if (wyr != NaC)
 	    printf(" %5d", gzc);
 	printf("\n");
     }
@@ -172,7 +175,7 @@ void czytaj(FILE * fn, int wyr, int *glc, int *gwc, int *gcc, int *gzc)
 
     /* wyswietlenie statystyk */
     printf("%5d %5d %5d", lc, wc, cc);
-    if (wyr != -1)		/* jesli trzeba, uwzglednij ilosc wystapien znaku X */
+    if (wyr != NaC)		/* jesli trzeba, uwzglednij ilosc wystapien znaku X */
 	printf(" %5d", zc);
     printf("\n");
 
