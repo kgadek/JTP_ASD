@@ -149,7 +149,7 @@ void czytaj(FILE * fn, int wyr, int *glc, int *gwc, int *gcc, int *gzc)
 	case 13:		/* \r  - obsluga windowsowego/macowego CR */
 	    word = 0;		/* konczy slowo */
 	    break;
-	case 11:		/* tab */
+	case 9:			/* tab */
 	case 32:		/* spacja */
 	    word = 0;		/* oba koncza slowo */
 	    break;
