@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TABSIZE 101		/* 100 cyfr + 1 przeniesienie */
-#define SHOWPARAM "Wywolanie:\n\t%s plik_wejsciowy\n",argv[0]
-#define GET(arr,el) (((el)>=0)?(arr)[el]:0)
+#define TABSIZE 101				/* 100 cyfr + 1 przeniesienie */
+#define SHOWPARAM "Wywolanie:\n\t%s plik_wejsciowy\n",argv[0]	/* czesc wspolna
+								   komunikatow o bledach*/
+#define GET(arr,el) (((el)>=0)?(arr)[el]:0)	/* makro przydatne w glownej petli:
+						   pobierz el-ty element z tablicy
+						   arr lub 0 gdy el < 0 */
 
 char a[TABSIZE], b[TABSIZE], c[TABSIZE],	/* odpowiednio: tablica
 						   wejsciowa A, wejsciowa B,
@@ -14,23 +17,30 @@ int i, la, lb, lm;		/* dlugosc A, dlugosc B, maksimum dlugosci
 				   z A i B */
 
 int parse(char *, int *);	/* przetworz wejscie do odpowiedniego
-				   formatu (kody 0-15) */
+				   formatu (kody 0-15) jednoczesnie zapamietujac
+				   dlugosc wejscia (w drugim parametrze);
+				   zwraca 0 - w wypadku sukcesu
+				   	  1 - w wypadku napotkania bledu */
 
 int main(int argc, char **argv)
 {
     FILE *fn;
+    /* Obsluga podstawowych bledow */
     if (argc != 2) {
 	fprintf(stderr, "Nie podano pliku wejsciowego!\n" SHOWPARAM);
 	exit(1);
     }
+    /* Obsluga podstawowych bledow */
     fn = fopen(argv[1], "r");
     if (!fn) {
 	fprintf(stderr, "Nie mozna otworzyc podanego pliku!\n" SHOWPARAM);
 	exit(1);
     }
+    /* Przygotowanie pamieci, wczytanie danych */
     for (i = 0; i < TABSIZE; ++i)			/* zeruj tablice */
 	a[i] = b[i] = 0;
     fscanf(fn, " %s %s ", a, b);
+    /* Przetworzenie wejscia, obsluga kolejnych bledow */
     if (parse(a, &la) || parse(b, &lb) || !la || !lb || la>=TABSIZE || lb>=TABSIZE) {
 	    						/* obsluga bledow
 							   - bledu parsowania (zly format),
@@ -40,6 +50,7 @@ int main(int argc, char **argv)
 	fclose(fn);
 	exit(1);
     }
+    /* Obliczenia */
     lm = la > lb ? la : lb;
     r = 0;
     for (i = TABSIZE - 1; (i > -1) && (TABSIZE - i - 1 < lm || r); --i) {
