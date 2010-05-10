@@ -8,14 +8,13 @@
 
 char a[TABSIZE], b[TABSIZE], c[TABSIZE],	/* odpowiednio: tablica
 						   wejsciowa A, wejsciowa B,
-						   wyjsciowa*/
-     r;						/* reszta z dodawania (overflow) */
-int i,
-    la, lb, lm;					/* dlugosc A, dlugosc B, maksimum dlugosci
-   						   z A i B */
+						   wyjsciowa */
+ r;				/* reszta z dodawania (overflow) */
+int i, la, lb, lm;		/* dlugosc A, dlugosc B, maksimum dlugosci
+				   z A i B */
 
-int parse(char *, int *);			/* przetworz wejscie do odpowiedniego
-						   formatu (kody 0-15)*/
+int parse(char *, int *);	/* przetworz wejscie do odpowiedniego
+				   formatu (kody 0-15) */
 
 int main(int argc, char **argv)
 {
@@ -29,49 +28,51 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Nie mozna otworzyc podanego pliku!\n" SHOWPARAM);
 	exit(1);
     }
-    for (i = 0; i < TABSIZE; ++i)
+    for (i = 0; i < TABSIZE; ++i)			/* zeruj tablice */
 	a[i] = b[i] = 0;
     fscanf(fn, " %s %s ", a, b);
-    if (parse(a, &la) || parse(b, &lb) || !la || !lb) {	/* obsluga bledow:
-   							   - bledu parsowania (zly format),
-							   - braku jednej/obu liczb */
-	fprintf(stderr, "Dane wejsciowe sa niepoprawne!\n" SHOWPARAM);
+    if (parse(a, &la) || parse(b, &lb) || !la || !lb || la>=TABSIZE || lb>=TABSIZE) {
+	    						/* obsluga bledow
+							   - bledu parsowania (zly format),
+							   - braku jednej/obu liczb
+							   - za duze liczby na wejsciu */
+	fprintf(stderr, "Dane w pliku sa niepoprawne!\n" SHOWPARAM);
 	fclose(fn);
 	exit(1);
     }
     lm = la > lb ? la : lb;
     r = 0;
-    for (i = TABSIZE - 1; (i > -1) && (TABSIZE-i-1<lm || r); --i) {
-			/* petla iteruje od ostatniego elementu i przerywa dzialanie
-			   gdy:
-			     tablica jest wypelniona
-			   albo
-			     juz nie ma nic do dodania */
+    for (i = TABSIZE - 1; (i > -1) && (TABSIZE - i - 1 < lm || r); --i) {
+	/* petla iteruje od ostatniego elementu i przerywa dzialanie
+	   gdy:
+	   tablica jest wypelniona
+	   albo
+	   juz nie ma nic do dodania */
 	--la;
 	--lb;
-	c[i] = (char) (GET(a, la) + GET(b, lb) + r);	/* makro pozwala ukryc IF-y*/
-	if (c[i] > 15) {		/* obsluga overflow */
+	c[i] = (char) (GET(a, la) + GET(b, lb) + r);	/* makra pozwalaja ukryc IF-y */
+	if (c[i] > 15) {			/* obsluga overflow */
 	    r = 1;
 	    c[i] = (char) (c[i] - 16);
 	} else
 	    r = 0;
 	if (c[i] > 9)
-	    c[i] = (char) (c[i] + 87);	/* wynik z zakresu a-f */
+	    c[i] = (char) (c[i] + 87);		/* wynik z zakresu a-f */
 	else
-	    c[i] = (char) (c[i] + 48);	/* wynik z zakresu 0-9 */
+	    c[i] = (char) (c[i] + 48);		/* wynik z zakresu 0-9 */
     }
-    for (i = 0; c[i]=='0'; ++i);
-    for (; i < TABSIZE; ++i)
+    for (i = 0; c[i] == '0'; ++i);		/* pomin zera na poczatku */
+    for (; i < TABSIZE; ++i)				/* wypisywanie wyniku */
 	printf("%c", (char) c[i]);
     printf("\n");
-    fclose(fn);
+    fclose(fn);						/* zamkniecie pliku */
     return 0;
 }
 
 int parse(char *tab, int *len)
 {
     for ((*len) = 0; tab[*len]; ++(*len)) {
-	if (47 < tab[*len] && tab[*len] < 58)	/* cyfra 0-9 */
+	if (47 < tab[*len] && tab[*len] < 58)		/* cyfra 0-9 */
 	    tab[*len] = (char) (tab[*len] - 48);
 	else if (64 < tab[*len] && tab[*len] < 71)	/* znak A-F */
 	    tab[*len] = (char) (tab[*len] - 65 + 10);
