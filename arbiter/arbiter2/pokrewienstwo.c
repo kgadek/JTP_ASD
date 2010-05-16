@@ -149,11 +149,13 @@ void listAdd(ndlist **x, node *p) {
 	assert(p!=NULL);
 	/*dbg*/printf("jestem\n");
 	ndlist *y = *x;
+	assert(*x);
+	assert(y->p);
 	while( y != NULL && y->p != p) {
+		/*dbg*/printf("kp\n");
 		x = &(y->n);
 		y = y->n;
 	}
-	assert(p==NULL);
 	if(y->p == p)
 		return;
 	if((*x)==NULL) {
