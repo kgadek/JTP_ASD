@@ -45,7 +45,7 @@ namespace print_tree {
                 _print(x,h);
         }
         void print_norm(avlNode *x, int h) {
-		/*dbg*/printf("________________________________________\n");
+		/*dbg*/printf("__________________________________________________\n");
                 a=-1;
                 b+=(h-1)*c;
                 _print(x,h);
@@ -59,7 +59,7 @@ namespace print_tree {
 
 void avlInit(avlNode *x) {
 	x->bal = 0;
-	x->l[0] = x->l[0] = NULL;
+	x->l[0] = x->l[1] = NULL;
 }
 
 avlNode* avlInsert(avlNode **R, int k) {
@@ -104,7 +104,6 @@ avlNode* avlInsert(avlNode **R, int k) {
 	/*dbg*/assert( s != NULL );
 	r = p = s->l[ k > s->key ];				/* A6. poprawa wartosci
 									balansow */
-	/*dbg*/assert( s->key == 7 );
 	/*dbg*/assert( q->key == k );
 	/*dbg*/if( p == NULL ) {
 		print_tree::print_norm(*R,6);
@@ -209,67 +208,67 @@ void avl_testCase1::testC() {		/* testy drzewa z ponad 1 wierzcholkiem */
 	CPPUNIT_ASSERT( avlInsert(&root,7) != NULL );	/* dodawanie wierzcholkow */
 	CPPUNIT_ASSERT( avlQuery(root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7)->key == 7 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,1) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,1) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,1)->key == 1 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,2) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,2) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,2)->key == 2 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7)->key == 7 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,3) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,3) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,3)->key == 3 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7)->key == 7 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,4) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,4) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,4)->key == 4 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,5) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,5) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,5)->key == 5 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,6) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,6) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,6)->key == 6 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,7)->key == 7 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,8) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,8) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,8)->key == 8 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,9) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,9) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,9)->key == 9 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,5) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,5) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,5)->key == 5 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,1) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,1) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,1)->key == 1 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,2) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,2) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,2)->key == 2 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( avlInsert(&root,10) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,10) != NULL );
 	CPPUNIT_ASSERT( avlQuery(root,10)->key == 10 );
-	print_tree::print_norm(root,4);
+	print_tree::print_norm(root,7);
 	CPPUNIT_ASSERT( balanceCheck(root) == 1 );	/* sprawdzenie balansu
 							   drzewa */
 }
