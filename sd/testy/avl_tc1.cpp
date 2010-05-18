@@ -1,5 +1,8 @@
+/* Dosc skomplikowany test, kompilacja trwa ok. 18sek! */
+
 #ifndef __AVL_TESTCASE1
 #define __AVL_TESTCASE1
+
 
 #include <cstdio>
 #include "avl.h"
