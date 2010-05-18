@@ -13,12 +13,12 @@ void print_tree::_print(avlNode *x, int h) {
 		return;
 	}
 	int i=a*(c*(h-1))+b+1;
-	print_tree::_print(x->l[0],h-1);
+	print_tree::_print(x->l[1],h-1);
 	while(--i>0) putchar(' ');
 	printf("%c[;%dm(%3d)%c[%dm\n",
 			0x1B,32+x->bal,x->key,
 			0x1B,0);
-	print_tree::_print(x->l[1],h-1);
+	print_tree::_print(x->l[0],h-1);
 }
 
 void print_tree::print_rev(avlNode *x, int h) {
@@ -26,7 +26,7 @@ void print_tree::print_rev(avlNode *x, int h) {
 	print_tree::_print(x,h);
 }
 void print_tree::print_norm(avlNode *x, int h) {
-	/*dbg*/printf("__________________________________________________\n");
+	/*dbg*///printf("__________________________________________________\n");
 	a=-1;
 	b+=(h-1)*c;
 	print_tree::_print(x,h);
