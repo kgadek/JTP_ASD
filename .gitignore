@@ -8,3 +8,10 @@ b3
 _Makefile
 jtp1-2/outf
 tags
+*.dvi
+*.pdf
+*.idx
+*.log
+*.scn
+*.tex
+*.toc

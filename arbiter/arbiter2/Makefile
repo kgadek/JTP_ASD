@@ -1,8 +1,5 @@
-pokr: pokr.cpp
-	g++ -O2 -Wall pokr.cpp -o pokr
-
-pokrewienstwo: pokrewienstwo.c
-	gcc -O2 -Wall pokrewienstwo.c -o pokrewienstwo
-
+pokr: pokr.w
+	cweave pokr.w && pdftex pokr.tex
+	ctangle pokr.w && g++ -O2 -lm -g -ansi -pedantic -W -Wall pokr.c -o pokr
 clean:
-	rm -f pokrewienstwo pokr
+	rm -f pokr.c pokr.idx pokr.log pokr.scn pokr.tex pokr.toc 
