@@ -1,13 +1,17 @@
-CC	= gcc
 CXX	= g++
-CFLAGS	= -ansi -pedantic -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
-CXXFLAGS = -W -Wall -Wshadow -Weffc++ -Wformat -Wsequence-point -Wunused -Wuninitialized -Wfloat-equal -ansi -pedantic
+CXXFLAGS = -W -Wall -Wshadow -Weffc++ -Wformat -Wsequence-point\
+	   -Wunused -Wuninitialized -Wfloat-equal -ansi -pedantic
 LDFLAGS	= -O2 -lm
-SRC	= punkty.h punkty.cpp
+SRC	= punkty.h punkty.cpp StosTablica.h StosTablica.cpp\
+	  StosTablicaRosnaca.h StosTablicaRosnaca.cpp Makefile
 PKGNAME	= GadekKonrad-jtp1-4.tgz
+
+.PHONY: clean
+.PHONY: all
 
 clean:
 	rm -f *.o punkty program $(PKGNAME) *~ *swp
+all: program punkty
 
 %: %.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -o $@
