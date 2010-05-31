@@ -3,7 +3,7 @@ CXX	= g++
 CFLAGS	= -ansi -pedantic -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
 CXXFLAGS = -W -Wall -Wshadow -Weffc++ -Wformat -Wsequence-point -Wunused -Wuninitialized -Wfloat-equal -ansi -pedantic
 LDFLAGS	= -O2 -lm
-SRC	= b1.cpp b2.cpp
+SRC	= punkty.h punkty.cpp
 PKGNAME	= GadekKonrad-jtp1-4.tgz
 
 clean:
@@ -18,5 +18,5 @@ clean:
 program: StosTablica.o StosTablicaRosnaca.o program.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -o $@
 
-pkg: clean $(SRC)
+pkg: clean 
 	tar -zcf $(PKGNAME) $(SRC)
