@@ -27,12 +27,10 @@ Na wejsciu bedzie maksymalnie |8000000| osob (bardzo luzne oszacowanie).
 @<Zmienne globalne@>@;
 
 int main() {
+	/*dbg*/printf("sprawdzam rozmiar drzewa...\n");
+	/*dbg*/printf("avl size check: %d\n",avlSizeCheck(avlR));
 	while( fgets(input,INPUTLEN,stdin) != NULL ) {	/* fgets i sscanf sa "bezpieczne" */
 		@<Wstepnie przetworz tekst@>@;
-		/*dbg*/printf("_____________________________\n");
-		/*dbg*/printf("X: %s\n",X);
-		/*dbg*/printf("R: %s\n",R);
-		/*dbg*/printf("Y: %s\n",Y);
 		@<Zdobadz wskazniki do osob@>@;
 		if( !strcmp(R,":") ) {
 			@<Query@>@;
@@ -56,8 +54,7 @@ rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 @<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
 osoba *xx1, *yy1;	/* pointery na aktualnie przetwarzane obiekty |osoba|... */
-avlNode *xx2, *yy2;	/* ...jak i przechowujace je obiekty |avlNode| */
-avlNode *avlR;		/* korzen drzewa AVL */
+avlNode *avlR = NULL;		/* korzen drzewa AVL */
 
 
 
@@ -74,51 +71,41 @@ strcat(Y,Ya);
 
 @ Ustawianie pointerow.
 
-Kod dzieli sie na 2 czesci:
-\item{1.} Utworzenie (tymczasowych?) obiektow |osoba|.
-\item{2.} Szukanie powyzszego obiektu w drzewie.
-\item\item{2.1.} Jesli nie istnieje - dodaj do drzewa.
-\item\item{2.2.} Jesli istnieje - usuniecie tymczasowego obiektu |osoba| i poprawienie
-pointera.
-Powtorz powyzsze czynnosci dla drugiej osoby.
-
 @<Zdobadz wskazniki do osob@>=
-xx1 = MEMALLOC(osoba);		/* 1, */
-xx1->X = MEMNALLOC(char,strlen(X)+1);
-strcpy(xx1->X,X);
-xx1->X = X;
-xx1->hash = hashOsoba(X);
-xx2 = avlQuery(avlR,xx1);	/* 2. */
-/*dbg*/printf("avlQuery>%s< : %d\n",X,xx2!=NULL);
-if(!xx2) {			/* 2.1. */
-	/*dbg*/printf("\tdodaje >%s<\n",X);
-	xx2 = avlInsert(&avlR,xx1);
-} else {
-	MEMFREE(xx1);		/* 2.2 */
-	xx1 = xx2->key;
-}
-assert(xx1->X == X);
+/*dbg*/printf("#################### %s\n",X);
+/*dbg*/printf("sprawdzam rozmiar drzewa...\n");
+/*dbg*/printf("avl size check: %d\n",avlSizeCheck(avlR));
+xx1 = avlInsert(&avlR,X,calcHash(X))->key;
+/*dbg*/assert(strcmp(xx1->X,X)==0);
+/*dbg*/assert(xx1->hash == calcHash(X));
+/*dbg*/printf("sprawdzam rozmiar drzewa...\n");
+/*dbg*/printf("avl size check: %d\n",avlSizeCheck(avlR));
+/*dbg*/printf("#################### %s\n",Y);
+yy1 = avlInsert(&avlR,Y,calcHash(Y))->key;
+/*dbg*/assert(strcmp(yy1->X,Y)==0);
+/*dbg*/assert(yy1->hash == calcHash(Y));
+/*dbg*/printf("sprawdzam rozmiar drzewa...\n");
+/*dbg*/printf("avl size check: %d\n",avlSizeCheck(avlR));
+/*dbg*/printf("____________________\n");
 
-yy1 = MEMALLOC(osoba);
-yy1->X = MEMNALLOC(char,strlen(Y)+1);
-strcpy(yy1->X,Y);
-yy1->hash = hashOsoba(Y);
-yy2 = avlQuery(avlR,yy1);
-/*dbg*/printf("avlQuery>%s< : %d\n",Y,yy2!=NULL);
-if(!yy2) {
-	/*dbg*/printf("\tdodaje >%s<\n",Y);
-	yy2 = avlInsert(&avlR,yy1);
-} else {
-	MEMFREE(yy1);
-	yy1 = yy2->key;
-}
-assert(yy1->X == Y);
 
+@ Kpfp.
+
+@<Definicje funkcji@>=
+int avlSizeCheck(avlNode *x) {
+	if(!x)
+		return 0;
+	return 1+avlSizeCheck(x->l[0])+avlSizeCheck(x->l[1]);
+}
 
 
 @ Czyszczenie pamieci.
 
 @<Czyszczenie pamieci@>=
+/*dbg*/printf("cleaning\n");
+/*dbg*/printf("sprawdzam rozmiar drzewa...\n");
+/*dbg*/printf("avl size check: %d\n",avlSizeCheck(avlR));
+/*dbg*/printf("clean\n");
 avlFree(&avlR);		/* czysc wszystkie obiekty |avlNode| i |osoba| */
 
 
@@ -153,6 +140,18 @@ int osoba::operator<(osoba const *x) const {
 
 
 
+@ Liczenie hash-a osoby.
+
+@<Definicje funkcji@>=
+int calcHash(char *x) {
+	int ret = 0;
+	while(*x)
+		ret = (ret + (int)(*(x++))*15485863)%982451653;
+	return ret;
+}
+
+
+
 
 
 
@@ -162,34 +161,6 @@ Drzewo AVL z operacjami |avlNode* Insert(...)| i |avlNode* Query(...)|.
 
 Ustalona kolejnosc wierzcholkow: |x| jest lewym synem |y| $\iff$
 |(x->hash < y->hash) || ((x->hash == y->hash) && strcmp(x->X,y->X)<0) |.
-
-
-
-@ Liczenie hash-a osoby.
-
-@<Definicje funkcji@>=
-int hashOsoba(char *x) {
-	return 0;
-}
-
-
-
-@ Porownywanie osob.
-
-|osobaCmp(x,y)| =
-$\left\{\matrix{-1\hfill&x>y\hfill\cr0\hfill&x=y\hfill\cr+1\hfill&x<y\hfill}\right.$
-
-@<Definicje funkcji@>=
-int osobaCmp(osoba *x, osoba *y) {
-	int v;
-	if(x->hash != y->hash)
-		return x->hash < y->hash?+1:-1;
-	assert(x->X != NULL);
-	v = strcmp(x->X,y->X);
-	if(v==0)
-		return v;
-	return v>0?-1:+1;
-}
 
 
 
@@ -220,70 +191,82 @@ void avlInit(avlNode *x) {
 
 @ Czyszczenie pamieci.
 
-Czysci tez wskazywany przez |key| obiekt |osoba|.
+Czysci tez wskazywany przez |key| obiekt |osoba|. Destruktor |osoba::~osoba| nie powinien
+niszczyc powiazanych, gdyz tym zajmuje sie ponizsza procedura.
+
+Nie dziala poprawnie! Wywolanie rekurencyjne wywoluje "Naruszenie ochrony pamieci".
 
 @<Definicje funkcji@>=
 void avlFree(avlNode **x) {
-        if((*x)==NULL)
+        if(!x || !(*x))
                 return;
 	if((*x)->key) {
 		MEMFREE((*x)->key);
 		(*x)->key = NULL;
 	}
-        avlFree(&((*x)->l[0]));
-        avlFree(&((*x)->l[1]));
+	//avlFree((*x)->l);
+	//avlFree((*x)->l+1);
         MEMFREE(*x);
-}
-
-
-
-@ Szukanie w drzewie.
-
-@<Definicje funkcji@>=
-avlNode* avlQuery(avlNode *R, osoba *k) {
-	assert(k != NULL);
-        while(R && osobaCmp(R->key,k)!=0) {
-                R = R->l[k < R->key];
-	}
-        return R;
+	(*x) = NULL;
 }
 
 
 
 @ Dodawanie do drzewa.
 
-Algorytm top-down (dwuprzebiegowy) na drzewie AVL.
-Dodaje |avlNode| wskazujacy na obiekt typu |osoba| do drzewa o ile wczesniej
-dana osoba tam nie wystepowala.
-Zwraca wskaznik na obiekt |avlNode| (niezaleznie czy wczesniej istnial czy nie).
-Zaklada, ze dodawany obiekt ma juz policzony |hash|.
+Algorytm dodawania top-down (dwuprzebiegowy) drzewa AVL.
+
+Przyjmuje opis osoby i, jesli danej osoby nie ma w drzewie, tworzy powiazane obiekty
+|avlNode| i |osoba| bedace odpowiednikami podanej osoby.
+
+Zwraca wskaznik do obiektu |avlNode| wskazujacego na podana osobe.
+
+Zwrocic uwage na |strncpy()|!
 
 
 @<Definicje funkcji@>=
-avlNode* avlInsert(avlNode **R, osoba *k) {
+avlNode* avlInsert(avlNode **R, char *k, int hash) {
         avlNode *head, *p, *q, *r, *s, *t, *u;
         int a,d;
         if(*R == NULL) {                                        /* Przypadek specjalny:
 								   puste drzewo */
                 (*R) = MEMALLOC(avlNode);       /* utworz node */
                 avlInit(*R);                    /* zainicjuj */
-                (*R)->key = k;                  /* ustaw mu wartosc */
+                (*R)->key = MEMALLOC(osoba);    /* ustaw wartosci */
+		a = strlen(k);
+		(*R)->key->X = MEMNALLOC(char,a+1);
+		strncpy((*R)->key->X,k,a+1);
+		(*R)->key->X[a] = '\0';
+		(*R)->key->hash = hash;
                 return *R;
         }
         u = NULL;                               /* aby sie kompilator nie rzucal */
         head = MEMALLOC(avlNode);               /* utworzenie |HEAD| */
         avlInit(head);
-        head->l[0] = *R;                                        /* A1. inicjacja */
+	head->key = MEMALLOC(osoba);
+	head->key->X = MEMNALLOC(char,1);
+	head->key->X[0]='\0';
+        head->l[0] = *R;                                   /* A1. inicjacja */
         t = head;
         q = p = s = *R;
         while(q != NULL) {                                      /* A2. szukanie */
-                if(osobaCmp(k,p->key)==0)      /* znaleziono; jest w drzewie wiec nie dodawaj */
-                        return p;
-                d = (p->key < k);
+		if(hash == p->key->hash && !strcmp(k,p->key->X))
+			/* znaleziono; jest w drzewie wiec nie dodawaj */
+			return p;
+		d = !((hash < p->key->hash) || ((hash == p->key->hash) && (strcmp(k,p->key->X) < 0)));
                 q = p->l[d];                                    /* A3/A4. przejscie lewo/prawo */
-                if(q == NULL) {
+		if(!q) {
+		} else if(q->bal != 0) {
+		}
+                if(q == NULL) {					/* A5. wstawienie */
                         p->l[d] = u = q = MEMALLOC(avlNode);
                         avlInit(q);
+			a = strlen(k);
+			q->key = MEMALLOC(osoba);
+			q->key->X = MEMNALLOC(char,a+1);
+			strncpy(q->key->X,k,a+1);
+			q->key->X[a] = '\0';
+			q->key->hash = hash;
                         break;
                 } else if(q->bal != 0) {
                         t = p;
@@ -291,17 +274,20 @@ avlNode* avlInsert(avlNode **R, osoba *k) {
                 }
                 p = q;
         }
-        q->key = k;                                             /* A5. wstawianie */
-        r = p = s->l[ s->key < k ];                             /* A6. poprawa wartosci balansow */
+								/* A6. poprawa wartosci balansow */
+        r = p = s->l[ !((hash < s->key->hash) ||
+			((hash == s->key->hash) && (strcmp(k,s->key->X) < 0))) ];
         while(p!=q) {                           /* $\forall p^\prime:$ $p^\prime$
 						   jest miedzy |p| a |q| (poza |q|) */
-                d = p->key < k;                 /*      wybierz kierunek */
+						/*      wybierz kierunek */
+		d = !((hash < p->key->hash) || ((hash == p->key->hash) && (strcmp(k,p->key->X) < 0)));
                 p->bal = 2*d - 1;               /*      popraw balans */
                 p = p->l[d];                    /*      przejdz dalej */
         }
         q = s;                                  /* zapamietaj s (to bedzie nowy rodzic rotowanego
 						   poddrzewa) */
-        a = k < s->key?-1:1;                                    /* A7. ustawienie balansu drzewa */
+        		                                /* A7. ustawienie balansu drzewa */
+	a = (!((hash < p->key->hash) || ((hash == p->key->hash) && (strcmp(k,p->key->X) < 0))))?+1:-1;
         if(s->bal == 0) {                               /* A7.i - lekkie zaburzenie balansu
 							   (+1 lub -1) co znaczy, ze drzewo uroslo */
                 s->bal = a;
