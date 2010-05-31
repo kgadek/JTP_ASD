@@ -56,21 +56,13 @@ Punkt Punkt::operator-(const Punkt &p) const {
 }
 
 std::ostream& operator<<(std::ostream &out, const Punkt &w) {
-	out << "(" << w.x << "," << w.y << "," << w.z << ")";
+	out << "[" << w.x << "," << w.y << "," << w.z << "]";
 	return out;
 }
 
 /* ====================[  Main  ]==================== */
 int main() {
 	std::ios_base::sync_with_stdio(0);
-	Wektor x;
-	std::cout << x << '\n';
-	x = -x;
-	std::cout << x << '\n';
-	Wektor y(1.5,2.0,3.0);
-	std::cout << y << '\n';
-	y = -y;
-	std::cout << y << '\n';
 	return 0;
 }
 

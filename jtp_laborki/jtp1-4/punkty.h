@@ -8,27 +8,31 @@ class Wektor;
 class Wektor {
 	double x,y,z;
 public:
-	Wektor();
-	Wektor(const double,const double,const double);
-	double len() const;
-	Wektor operator+(const Wektor&) const;
+	Wektor();					/* domyslny konstruktor */
+	Wektor(const double,const double,const double);	/* konstruktor z parametrami*/
+				/* konstruktor kopiujacy automatycznie generowany */
+	double len() const;				/* dlugosc wektora */
+	Wektor operator+(const Wektor&) const;		/* dodawanie wektorow */
 	Wektor& operator+=(const Wektor&);
-	Wektor operator-() const;
+	Wektor operator-() const;			/* odwracanie wektora */
 	friend Punkt operator+(const Punkt&,const Wektor&);
 	friend Punkt& operator+=(Punkt&, const Wektor&);
+							/* wypisywanie wektora */
 	friend std::ostream& operator<<(std::ostream &, const Wektor &);
 };
 
 class Punkt {
 	double x,y,z;
 public:
-	Punkt();
-	Punkt(const double,const double,const double);
-	Punkt operator-() const;
-	Punkt operator-(const Punkt&) const;
-	friend double odl(const Punkt&, const Punkt&);
-	friend Punkt operator+(const Punkt&,const Wektor&);
+	Punkt();					/* domyslny konstruktor */
+	Punkt(const double,const double,const double);	/* konstruktor z parametrami */
+	Punkt operator-() const;			/* zwraca punkt symetryczny
+							   wzgledem [0,0,0] */
+	Punkt operator-(const Punkt&) const;		/* odejmowanie punktow */
+	friend double odl(const Punkt&, const Punkt&);	/* odleglosc dwoch punktow */
+	friend Punkt operator+(const Punkt&,const Wektor&);	/* dodawanie punktow */
 	friend Punkt& operator+=(Punkt&, const Wektor&);
+							/* wypisywanie punktu */
 	friend std::ostream& operator<<(std::ostream &, const Punkt &);
 };
 
