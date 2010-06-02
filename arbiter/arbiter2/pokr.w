@@ -140,13 +140,17 @@ int osoba::operator<(osoba const *x) const {
 
 
 
-@ Liczenie hash-a osoby.
+@ Liczenie hash-a imienia danej osoby.
+
+Znalezione na stronie http://www.cse.yorku.ca/~oz/hash.html.
+
+Algorytm: $hash_i = hash_{i-1}*33 \odot x[i]$ gdzie $\odot$ oznacza XOR.
 
 @<Definicje funkcji@>=
 int calcHash(char *x) {
-	int ret = 0;
+	int ret = 5381;
 	while(*x)
-		ret = (ret + (int)(*(x++))*15485863)%982451653;
+		ret = ((ret << 5) + ret) ^ (*(x++));
 	return ret;
 }
 
@@ -250,9 +254,11 @@ avlNode* avlInsert(avlNode **R, char *k, int hash) {
         t = head;
         q = p = s = *R;
         while(q != NULL) {                                      /* A2. szukanie */
-		if(hash == p->key->hash && !strcmp(k,p->key->X))
+		if(hash == p->key->hash && !strcmp(k,p->key->X)) {
+			/*dbg*/printf(">%s<(%d) juz jest\n",k,hash);
 			/* znaleziono; jest w drzewie wiec nie dodawaj */
 			return p;
+		}
 		d = !((hash < p->key->hash) || ((hash == p->key->hash) && (strcmp(k,p->key->X) < 0)));
                 q = p->l[d];                                    /* A3/A4. przejscie lewo/prawo */
 		if(!q) {
