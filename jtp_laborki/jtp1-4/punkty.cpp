@@ -3,10 +3,10 @@
 #include "punkty.h"
 
 
+
 //#define NDEBUG	/* do testow klas i metod____________________________________________ */
 #include <cassert>	/* odkomentowac #define NDEBUG by nie testowac */
 #define EQ(a,b) (fabs((double)(a)-(double)(b))<0.0000001)	/* do porownywania double */
-
 
 
 

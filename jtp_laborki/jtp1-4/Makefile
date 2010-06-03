@@ -8,19 +8,24 @@ PKGNAME	= GadekKonrad-jtp1-4.tgz
 
 .PHONY: clean
 .PHONY: all
-
+.PHONY: pkg
+.PHONY: program
+.PHONY: punkty
 clean:
 	rm -f *.o punkty program $(PKGNAME) *~ *swp
-all: program punkty
+all: punkty program
+pkg: clean 
+	tar -zcf $(PKGNAME) $(SRC)
 
-%: %.cpp
+# Kompilacja programu B1 (Punkty)
+punkty: punkty.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -o $@
 
+# Kompilacja programu B2 (StosTablica(Rosnaca))
+program: StosTablica.o StosTablicaRosnaca.o program.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -o $@
+
+# Regula kompilacji modulow (pasuje do *.o)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -c -o $@
 
-program: StosTablica.o StosTablicaRosnaca.o program.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $? -o $@
-
-pkg: clean 
-	tar -zcf $(PKGNAME) $(SRC)
