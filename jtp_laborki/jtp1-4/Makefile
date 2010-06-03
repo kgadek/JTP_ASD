@@ -6,14 +6,13 @@ SRC	= punkty.h punkty.cpp StosTablica.h StosTablica.cpp\
 	  StosTablicaRosnaca.h StosTablicaRosnaca.cpp Makefile
 PKGNAME	= GadekKonrad-jtp1-4.tgz
 
-.PHONY: clean
-.PHONY: all
-.PHONY: pkg
-.PHONY: program
-.PHONY: punkty
+.PHONY: clean all pkg program punkty
+
 clean:
 	rm -f *.o punkty program $(PKGNAME) *~ *swp
+
 all: punkty program
+
 pkg: clean 
 	tar -zcf $(PKGNAME) $(SRC)
 
