@@ -17,18 +17,12 @@
 
 @* Rdzen programu.
 
-Zadaniem |main|a jest wczytanie danych wejsciowych i wywolywanie odpowiednich instrukcji
+Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich instrukcji
 (w zaleznosci od sytuacji).
-
-Na wejsciu bedzie maksymalnie |8000000| osob (bardzo luzne oszacowanie).
 
 |INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
 
-@d INPUTLEN 1000
-@d MEMALLOC(type) (new type)
-@d MEMNALLOC(type,N) (new type[N])
-@d MEMFREE(obj) delete obj
-@d MEMNFREE(obj) delete [] obj
+@d INPUTLEN 100
 @c
 #include <cstdio>
 #include <cstdlib>
@@ -40,11 +34,15 @@ Na wejsciu bedzie maksymalnie |8000000| osob (bardzo luzne oszacowanie).
 @<Zmienne globalne@>@;
 
 int main() {
-	while( fgets(input,INPUTLEN,stdin) != NULL ) {	/* fgets i sscanf sa "bezpieczne" */
+	while( fgets(input,INPUTLEN,stdin) != NULL ) {	/* |fgets| i |sscanf| sa "bezpieczne" */
 		@<Wstepnie przetworz tekst@>@;
 		if( !strcmp(R,":") ) {
 			@<Query@>@;
 		} else {
+			xx1 = avlInsert(&avlR,X,getHash(X))->key;
+			assert(!strcmp(xx1->X,X));
+			yy1 = avlInsert(&avlR,Y,getHash(Y))->key;
+			assert(!strcmp(yy1->X,Y));
 		}
 	}
 	return 0;
@@ -62,7 +60,7 @@ rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 
 @<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
-osoba *xx1, *yy1;	/* pointery na aktualnie przetwarzane obiekty |osoba|... */
+osoba *xx1, *yy1;		/* pointery na aktualnie przetwarzane obiekty |osoba|... */
 avlNode *avlR = NULL;		/* korzen drzewa AVL */
 
 
@@ -71,9 +69,9 @@ avlNode *avlR = NULL;		/* korzen drzewa AVL */
 
 @<Wstepnie przetworz tekst@>=
 sscanf(input," %s %s %s %s %s ",X,Xa,R,Y,Ya);
-strcat(X," ");	/* polacz X i Xa w jedno */
+strcat(X," ");	/* polacz |X| i |Xa| w jedno */
 strcat(X,Xa);
-strcat(Y," ");	/* polacz Y i Ya w jedno */
+strcat(Y," ");	/* polacz |Y| i |Ya| w jedno */
 strcat(Y,Ya);
 
 
@@ -90,17 +88,18 @@ strcat(Y,Ya);
 
 Przechowuje imie i nazwisko oraz wskazniki do ojca i synow.
 
-Ważne jest odpowiednie wywolywanie destruktora. Przy niszcze
+|char *X| jest zewnetrznie zarzadzane (alokowane, czyszczone). Obiekty |osoba|
+nalezy usuwac recznie z poziomu |avlNode| lub innego (np przy operacjach na drzewie).
 
 @<Definicje struktur@>=
 class osoba {
 public:
-	char *X;		/* imie i nazwiski */
-	int hash;		/* hash */
-	osoba *p, *l, *r;	/* odpowiednio: parent, lewy, prawy */
-	osoba() : X(NULL), hash(0), p(NULL), l(NULL), r(NULL) {}
+	char *X;		/* imie i nazwisko */
+	int hash;		/* hash imienia */
+	osoba *p, *l, *r;	/* odpowiednio: ojciec, lewy, prawy */
+	osoba() : X(NULL), hash(0), p(NULL), l(NULL), r(NULL) { }
 	~osoba() {
-		if(X != NULL) free(X);
+		if(X != NULL) delete X;
 	}
 };
 
@@ -151,15 +150,15 @@ public:
 	}
 	avlNode(char *x,int h) : bal(0) {
 		int a = strlen(x);
-		key->hash = h;
-		key = MEMALLOC(osoba);
-		key->X = MEMNALLOC(char,a+1);
+		key = new osoba;
+		key->X = new char[a+1];
 		strncpy(key->X,x,a+1);
+		key->hash = h;
 		assert(key->X[a] == '\0');
 		l[0]=l[1]=NULL;
 	}
 	~avlNode() {
-		if(key != NULL) MEMFREE(key);
+		if(key != NULL) delete key;
 	}
 };
 
@@ -171,41 +170,43 @@ public:
 int osobaLt(char *x, int h, osoba *y) {
 	if(h != y->hash)
 		return h < y->hash;
-	return strcmp(x,y->X);
+	return strcmp(x,y->X) < 0;
 }
 int osobaGtEq(char *x, int h, osoba *y) {
-	if
+	if(h == y->hash)
+		return strcmp(x,y->X) >= 0;
+	return h > y->hash;
 }
 int osobaEq(char *x, int h, osoba *y) {
-	return (h == y->hash) && strcmp(x,y->X);
+	return (h == y->hash) && (strcmp(x,y->X)==0);
 }
 
 
 
 @ Dodawanie do drzewa.
 
-Napisane na podstawie The~Art~of~Computer~Programming~\xcite{knuth}{rozdzial 6.2.3}
-korzystajac takze ze wskazowek Julienne Walker\cite{jwalker}.
+Napisane na podstawie The~Art~of~Computer~Programming\xcite{knuth}{tom 3,
+rozdzial 6.2.3: Binary Search Tree} korzystajac takze ze wskazowek
+Julienne Walker\cite{jwalker}.
 
 @<Definicje funkcji@>=
 avlNode* avlInsert(avlNode **R, char *k, int hash) {
 	avlNode *head, *p, *q, *r, *s, *t, *u;
 	int a,d;
 	if(*R == NULL)						/* Przypadek specjalny: puste drzewo */
-		return (*R) = new avlNode(k,hash);	/* zainicjuj i ustaw wartosci */
+		return (*R) = new avlNode(k,hash);	/* zainicjuj |*R| i ustaw jego wartosci */
 	u = NULL;					/* to aby sie kompilator nie rzucal */
-	head = new avlNode; 				/* utworzenie HEAD */
+	head = new avlNode; 				/* utworzenie |head| */
 	head->l[0] = *R;					/* A1. inicjacja */
 	t = head;
 	q = p = s = *R;
 	while(q != NULL) {					/* A2. szukanie */
 		if(osobaEq(k,hash,p->key))			
 			return p;		/* znaleziono wiec nie dodawaj tylko zwroc wskaznik */
-		d = (k > p->key);
+		d = osobaGtEq(k,hash,p->key);
 		q = p->l[d];					/* A3/A4. przejscie lewo/prawo */
 		if(q == NULL) {
-			p->l[d] = u = q = new avlNode;
-			avlInit(q);
+			p->l[d] = u = q = new avlNode(k,hash);	/* $\leftarrow$ A5. wstawianie */
 			break;
 		} else if(q->bal != 0) {
 			t = p;
@@ -213,15 +214,14 @@ avlNode* avlInsert(avlNode **R, char *k, int hash) {
 		}
 		p = q;
 	}
-	q->key = k;						/* A5. wstawianie */
-	r = p = s->l[ k > s->key ];				/* A6. poprawa wartosci balansow */
-	while(p!=q) {				/* dla kazdego wierzcholka miedzy P a Q (bez Q) */
-		d = (k > p->key);		/* 	wybierz kierunek */
+	r = p = s->l[ osobaGtEq(k,hash,s->key) ];		/* A6. poprawa wartosci balansow */
+	while(p!=q) {				/* dla kazdego wierzcholka miedzy |p| a |q| (oprocz |q|) */
+		d = osobaGtEq(k,hash,p->key);	/* 	wybierz kierunek */
 		p->bal = 2*d - 1;		/* 	popraw balans */
 		p = p->l[d];			/* 	przejdz dalej */
 	}
-	q = s;					/* zapamietaj s (to bedzie nowy rodzic rotowanego poddrzewa) */
-	a = (k < s->key)?-1:1;					/* A7. ustawienie balansu drzewa */
+	q = s;					/* zapamietaj |s| (to bedzie nowy rodzic rotowanego poddrzewa) */
+	a = osobaLt(k,hash,s->key)?-1:1;					/* A7. ustawienie balansu drzewa */
 	if(s->bal == 0) {				/* A7.i - lekkie zaburzenie balansu (|+1| lub |-1|) */
 		s->bal = a;				/* 	czyli drzewo uroslo */
 		return u;
@@ -253,12 +253,12 @@ avlNode* avlInsert(avlNode **R, char *k, int hash) {
 		else if(p->bal == -a)
 			r->bal = a;
 	}
-	if(head == t)			/* ten fragm. zerznalem (problemy z podmiana korzenia) [2] */ 
-		(*R) = p;			/* gdy rotacja zmienila korzen to operuj na korzeniu */
+	if(head == t)
+		(*R) = p;			/* jesli rotacja zmienila korzen to operuj na korzeniu */
 	else
-		t->l[s == t->l[1]] = p;		/* wpp popraw wskazanie od ojca P */
-	MEMFREE(head);				/* pozbycie sie tymczasowego HEAD-a */
-	return u;				/* zwroc wsk. do dodanego wierzcholka */
+		t->l[s == t->l[1]] = p;		/* wpp popraw wskazanie od ojca |p| */
+	delete head;				/* pozbycie sie |head| */
+	return u;				/* zwroc wskaznik do dodanego wierzcholka */
 }
 
 
@@ -288,5 +288,5 @@ Kod znaleziony na stronie
 \pdfURL{http://www.cse.yorku.ca/\~{}oz/hash.html}.
 \bibitem{jwalker}
 Julienne Walker,
-$www.eternallyconfuzzled.com/tuts/datastructures/jsw_tut_avl.aspx$.
+\pdfURL{www.eternallyconfuzzled.com/tuts/datastructures/jsw\_tut\_avl.aspx}.
 \bibend
