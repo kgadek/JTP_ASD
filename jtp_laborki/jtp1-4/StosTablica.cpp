@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cassert>
 
+
 StosTablica::StosTablica(unsigned int const _size) :
 			ptr(NULL), size(_size), used(0) {
 	ptr = (char*)malloc(size*sizeof(char));
@@ -22,7 +23,8 @@ StosTablica::~StosTablica() {
 
 StosTablica& StosTablica::operator=(StosTablica const &x) {
 	size = x.size;
-	ptr = (char*)realloc(ptr,size*sizeof(char));
+	free(ptr);
+	ptr = (char*)malloc(size*sizeof(char));
 	assert( ptr != NULL );
 	for(used = 0; used<x.used;++used)
 		ptr[used] = x.ptr[used];

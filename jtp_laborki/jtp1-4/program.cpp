@@ -3,12 +3,21 @@
 #include <cstdio>
 #include <cassert>
 
+/*
+Do obslugi alokacji pamieci wykorzystalem alloc/realloc/free, gdyz:
+	- malloc nie inicjuje pamieci, wiec konstruktory klas dzialaja
+	  w czasie O(1) (new wywoluje konstruktor domyslny przy tworzeniu
+	  tablic (zrodlo: http://en.wikipedia.org/wiki/New_(C%2B%2B) ))
+ 	- realloc, w optymistycznym przypadku, pozwala na szybsze (O(1))
+	  zwiekszenie rozmiaru przydzielonej pamieci w procedurze push
+	  klasy StosTablicaRosnaca
+Podane czasy pomijaja czas na sama alokacje pamieci.
+*/
+
 int main() {
 	{
 	printf("start StosTablica test\n");
-
 	printf("\ttest a\n"); //===================
-
 	StosTablica sta;
 	assert( sta.empty() );
 	assert( !sta.full() );
@@ -75,15 +84,13 @@ int main() {
 	stf2 = stf1;
 	assert( !stf2.empty() );
 	assert( stf2.full() );
-
 	printf("end StosTablica test\n");
 	}
 
 
 
 	{
-	printf("start StosTablica test\n");
-
+	printf("start StosTablicaRosnaca test\n");
 	printf("\ttest a\n"); //===================
 	StosTablicaRosnaca stra(3,0);
 	assert( stra.empty() );
@@ -129,8 +136,13 @@ int main() {
 	assert( !strc3.empty() );
 	assert( strc3.pop() == 'b' );
 	assert( strc3.empty() );
-
-	printf("end StosTablica test\n");
+	StosTablicaRosnaca strc4(3,20);
+	strc4.push('c'); strc4.push('c'); strc4.push('c');
+	strc4.push('c'); strc4.push('c'); strc4.push('c');
+	strc4 = stc1;
+	assert( strc4.pop() == 'b');
+	assert( strc4.empty() );
+	printf("end StosTablicaRosnaca test\n");
 	}
 
 	return 0;

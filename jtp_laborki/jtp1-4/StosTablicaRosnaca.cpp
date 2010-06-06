@@ -27,7 +27,8 @@ void StosTablicaRosnaca::push(char x) {
 
 StosTablicaRosnaca& StosTablicaRosnaca::operator=(StosTablicaRosnaca const &x) {
 	size = x.size; step = x.step;
-	ptr = (char*)realloc(ptr,size*sizeof(char));
+	free(ptr);
+	ptr = (char*)malloc(size*sizeof(char));
 	for(used = 0; used<x.used;++used)
 		ptr[used] = x.ptr[used];
 	assert( ptr != NULL );

@@ -8,10 +8,14 @@ protected:
 	unsigned int step;
 public:
 	StosTablicaRosnaca(unsigned int const _size=100, unsigned int const _step=100);
-	StosTablicaRosnaca(StosTablica const &, unsigned int const _step);
+				/* domyslny konstuktor */
+	StosTablicaRosnaca(StosTablica const &, unsigned int const _step=100);
+				/* konstruktor kopiujacy z klasy dziedziczonej */
 	StosTablicaRosnaca(StosTablicaRosnaca const &);
-	void push(char);
+				/* konstruktor kopiujacy */
+	void push(char);	/* specjalizowana funkcja wrzucajaca na stos */
 	StosTablicaRosnaca& operator=(StosTablicaRosnaca const &);
+				/* operator przypisania (kopiujacy) */
 };
 
 
