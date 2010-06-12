@@ -1,3 +1,6 @@
+\input graphicx
+%\includegraphics[width=16ex]{test}
+% Uzycie: mpost plik --> epstopdf plik
 \def\cee/{C}
 \def\cpp/{\cee/{\tt++}}
 \newdimen\biblioindent\biblioindent=.25in
@@ -10,9 +13,7 @@
 \def\bibend{\egroup}
 \def\cite#1{[\csname#1\endcsname]}
 \def\xcite#1#2{[\csname#1\endcsname, #2]}
-\def\knuth{1}
-\def\bern{2}
-\def\jwalker{3}
+\def\bern{1}
 
 
 @* Rdzen programu.
@@ -22,7 +23,10 @@ Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich ins
 
 |INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
 
+|HASHSIZE| okresla rozmiar tablicy hashujacej (82837429 = 79M).
+
 @d INPUTLEN 100
+@d HASHSIZE 82837429
 @c
 #include <cstdio>
 #include <cstdlib>
@@ -30,19 +34,37 @@ Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich ins
 #include <cassert>
 
 @<Definicje struktur@>@;
-@<Definicje funkcji@>@;
 @<Zmienne globalne@>@;
+@<Definicje funkcji@>@;
 
 int main() {
-	while( fgets(input,INPUTLEN,stdin) != NULL ) {	/* |fgets| i |sscanf| sa "bezpieczne" */
+	@<Inicjacja zmiennych@>@;
+	i=0; // i=0 - nie policzylismy jeszcze par LCA
+	while( 1 ) {
+		if( fgets(input,INPUTLEN,stdin) == NULL )
+			break;
 		@<Wstepnie przetworz tekst@>@;
-		if( !strcmp(R,":") ) {
-			@<Query@>@;
+		@<Zdobadz pointery do osob@>@;
+		if( R[0]==':') {
+			if(!i) {
+				i=1; // i policz pary LCA
+			}
+			// query
 		} else {
-			xx1 = avlInsert(&avlR,X,getHash(X))->key;
-			assert(!strcmp(xx1->X,X));
-			yy1 = avlInsert(&avlR,Y,getHash(Y))->key;
-			assert(!strcmp(yy1->X,Y));
+			switch(R[1]) {
+			case 'r': if(R[5]=='p')
+					  make_grandparent(xx,yy);
+				  else
+					  make_grandparent(yy,xx);
+				break;
+			case 'o': make_cousin(xx,yy);
+				break;
+			case 'i': make_sibling(xx,yy);
+				break;
+			case 'a': make_child(yy,xx);
+				break;
+			case 'h': make_child(xx,yy);
+			}
 		}
 	}
 	return 0;
@@ -60,8 +82,9 @@ rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 
 @<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
-osoba *xx1, *yy1;		/* pointery na aktualnie przetwarzane obiekty |osoba|... */
-avlNode *avlR = NULL;		/* korzen drzewa AVL */
+osoba *hashtab[HASHSIZE];
+int i;
+osoba **xx,**yy;
 
 
 
@@ -84,38 +107,49 @@ strcat(Y,Ya);
 
 
 
+
 @* Klasa |osoba|.
 
-Przechowuje imie i nazwisko oraz wskazniki do ojca i synow.
+Zmienna |nn| przechowuje wskaznik na napis |"NN"|.
 
-|char *X| jest zewnetrznie zarzadzane (alokowane, czyszczone). Obiekty |osoba|
-nalezy usuwac recznie z poziomu |avlNode| lub innego (np przy operacjach na drzewie).
+Sluzy jako obiekt w 3 strukturach danych: w tablicy hashujacej, w drzewie
+(genealogicznym) i w lesie zbiorow rozlacznych.
+
+|char *name| jest wskaznikiem na imie i nazwisko danej osoby (alokacja pamieci i kopiowanie
+w konstruktorze) lub wskaznikiem na |*nn| (napis |"NN"|).
+
+Wskaznik |osoba *n| pelni dwie
+funkcje:
+\item{1.} gdy dany obiekt jest sztuczny, to |*n| wskazuje na |*this|.
+\item{2.} gdy obiekt jest konkretna osoba, to wskazuje na nastepny obiekt |osoba| w tablicy
+hashujacej.
+
+|osoba *p| wskazuje na ojca w drzewie genealogicznym, natomiast |*s| wskazuje na jego
+prawego brata.
+
+W lesie zbiorow rozlacznych uzywane sa wskazniki |osoba *l| - wskaznik na lidera grupy,
+|int rank| - ranga.
 
 @<Definicje struktur@>=
+char nn[] = {'N','N',0};
 class osoba {
 public:
-	char *X;		/* imie i nazwisko */
-	int hash;		/* hash imienia */
-	osoba *p, *l, *r;	/* odpowiednio: ojciec, lewy, prawy */
-	osoba() : X(NULL), hash(0), p(NULL), l(NULL), r(NULL) { }
+	char *name;		/* imie i nazwisko */
+	osoba  *n,		/* tablica hashujaca:	nastepny element kolizji */
+	       *p,		/* drzew genealogiczne:	ojciec*/
+	       *c,		/* 			syn */
+	       *s,		/* 			(prawy) brat */
+	       *l;		/* las zbiorow rozlacznych: 	wskazanie na ojca */
+	int rank;		/* 				ranga */
+	osoba() : name(nn), n(NULL), p(NULL), s(NULL), l(this), rank(0) { }
+	osoba(char *in) : n(NULL), p(NULL), s(NULL), l(this), rank(0) {
+		name = new char[strlen(in)+1];
+		strcpy(name,in);
+	}
 	~osoba() {
-		if(X != NULL) delete X;
+		if(name!=nn) delete [] name;
 	}
 };
-
-
-
-@ Funkcja hashujaca djb2\cite{bern}.
-
-@<Definicje funkcji@>=
-int getHash(char *x) {
-	int ret = 5381;
-	while(*x)
-		ret = ((ret << 5) + ret) ^ (*(x++));
-	/* |@t$hash_i = hash_{i-1}*33 \oplus x[i]$@>| */
-	return ret;
-}
-
 
 
 
@@ -126,167 +160,97 @@ int getHash(char *x) {
 
 
 
-@* Drzewo wyszukiwania.
 
-Drzewo AVL z operacjami |avlNode* Insert(...)| i |avlNode* Query(...)|.
+@* Obsluga tablicy hashujacej.
 
-Kolejnosc wierzcholkow: |x| jest lewym synem |y| $\iff$
-|(x->hash < y->hash) || ((x->hash == y->hash) && strcmp(x->X,y->X)<0) |.
-
-
-
-@ Klasa |avlNode|.
-
-Posiada konstruktor domyslny i inicjujacy.
-
-@<Definicje struktur@>=
-class avlNode {
-public:
-        osoba *key;                     /* klucz-wskaznik na obiekt |osoba| */
-        int bal;                        /* wartosc balansu (potrzebne 3 bity) */
-        avlNode *l[2];           	/* pointery do dzieci w drzewie */
-	avlNode() : key(NULL), bal(0) {
-		l[0]=l[1]=NULL;
-	}
-	avlNode(char *x,int h) : bal(0) {
-		int a = strlen(x);
-		key = new osoba;
-		key->X = new char[a+1];
-		strncpy(key->X,x,a+1);
-		key->hash = h;
-		assert(key->X[a] == '\0');
-		l[0]=l[1]=NULL;
-	}
-	~avlNode() {
-		if(key != NULL) delete key;
-	}
-};
+@<Inicjacja zmiennych@>=
+for(i=0;i<HASHSIZE;++i)
+	hashtab[i]=NULL;
 
 
 
-@ Porownywanie osob z obiektami |osoba|.
+@ Przeszukiwanie tablicy hashujacej.
+
+Po wykonaniu ciagu tych polecen, w |osoba **xx| jak i w |osoba **yy| beda znajdowac
+sie wskazania na pointery do szukanych osob (niezaleznie, czy dana osoba wczesniej
+byla rozpatrywana czy nie).
+
+@<Zdobadz pointery do osob@>=
+xx = (hashtab+getHash(X));
+while((*xx) && strcmp((*xx)->name,X))
+	xx = &((*xx)->n);
+if((*xx)==NULL)
+	(*xx) = new osoba(X);
+yy = (hashtab+getHash(Y));
+while((*yy) && strcmp((*yy)->name,Y))
+	yy = &((*yy)->n);
+if((*yy)==NULL)
+	(*yy) = new osoba(Y);
+
+
+
+
+@ Funkcja hashujaca djb2~\cite{bern}.
 
 @<Definicje funkcji@>=
-int osobaLt(char *x, int h, osoba *y) {
-	if(h != y->hash)
-		return h < y->hash;
-	return strcmp(x,y->X) < 0;
-}
-int osobaGtEq(char *x, int h, osoba *y) {
-	if(h == y->hash)
-		return strcmp(x,y->X) >= 0;
-	return h > y->hash;
-}
-int osobaEq(char *x, int h, osoba *y) {
-	return (h == y->hash) && (strcmp(x,y->X)==0);
+unsigned int getHash(char *str) {
+	unsigned int ret = 5381;
+	while(*str)
+		ret = ((ret << 5) + ret) ^ (*(str++));
+				/* |@t$hash_i = hash_{i-1}*33 \oplus str[i]$@>| */
+	return ret % HASHSIZE;	/* obciecie wyniku */
 }
 
 
+@q ================================================================================ @>
 
-@ Dodawanie do drzewa.
+@* Drzewo genealogiczne.
 
-Napisane na podstawie The~Art~of~Computer~Programming\xcite{knuth}{tom 3,
-rozdzial 6.2.3: Binary Search Tree} korzystajac takze ze wskazowek
-Julienne Walker\cite{jwalker}.
+
+
+@ Operacja laczenia wierzcholkow.
+Zaklada, ze oba parametry '|osoba **x|' i '|osoba **y|' nie wskazuja na NULL. Operacja
+|join(osoba **x,osoba **y)| powoduje wlaczenie osoby |*y| do osoby |*x| poprzez:
+\item{A1.} przepisanie dzieci osoby |*y| do osoby |*x|
+\item{A2.} wywolanie |join()| na ojcach |*x| i |*y|.
 
 @<Definicje funkcji@>=
-avlNode* avlInsert(avlNode **R, char *k, int hash) {
-	avlNode *head, *p, *q, *r, *s, *t, *u;
-	int a,d;
-	if(*R == NULL)						/* Przypadek specjalny: puste drzewo */
-		return (*R) = new avlNode(k,hash);	/* zainicjuj |*R| i ustaw jego wartosci */
-	u = NULL;					/* to aby sie kompilator nie rzucal */
-	head = new avlNode; 				/* utworzenie |head| */
-	head->l[0] = *R;					/* A1. inicjacja */
-	t = head;
-	q = p = s = *R;
-	while(q != NULL) {					/* A2. szukanie */
-		if(osobaEq(k,hash,p->key))			
-			return p;		/* znaleziono wiec nie dodawaj tylko zwroc wskaznik */
-		d = osobaGtEq(k,hash,p->key);
-		q = p->l[d];					/* A3/A4. przejscie lewo/prawo */
-		if(q == NULL) {
-			p->l[d] = u = q = new avlNode(k,hash);	/* $\leftarrow$ A5. wstawianie */
-			break;
-		} else if(q->bal != 0) {
-			t = p;
-			s = q;
+void join(osoba **x, osoba **y) {
+	osoba *t, **u;
+	while(1) {				/* A1.	Przepinanie dzieci */
+		t = (*x)->c;			/* 	|t| - stare dziecki |*x| */
+		(*x)->c = (*y)->c;		/* 	zastap dzieci |*x| przez
+							dzieci |*y| */
+		while(*u) {			/* 	popraw wskazanie na ojca
+							nowym dzieciom |*x| */
+			(*u)->p = (*x);
+			u = &((*u)->s);
 		}
-		p = q;
+		(*u) = t;			/* 	dolacz stare dzieci |*x| */
+		if(!((*y)->p))			/* A2.	Wywolywanie w gore drzewa */
+			return;			/* 	nic wiecej do zrobienia */
+		x = &((*x)->p);
+		y = &((*y)->p);
+		if(!(*x) || (*y)->n != (*y)) {	/* 	jesli trzeba zlaczyc
+							wierzcholki w druga strone, tj.
+							|x@t$\rightarrow$@>y| */
+			u = x; x = y; y = u;
+		}
 	}
-	r = p = s->l[ osobaGtEq(k,hash,s->key) ];		/* A6. poprawa wartosci balansow */
-	while(p!=q) {				/* dla kazdego wierzcholka miedzy |p| a |q| (oprocz |q|) */
-		d = osobaGtEq(k,hash,p->key);	/* 	wybierz kierunek */
-		p->bal = 2*d - 1;		/* 	popraw balans */
-		p = p->l[d];			/* 	przejdz dalej */
-	}
-	q = s;					/* zapamietaj |s| (to bedzie nowy rodzic rotowanego poddrzewa) */
-	a = osobaLt(k,hash,s->key)?-1:1;					/* A7. ustawienie balansu drzewa */
-	if(s->bal == 0) {				/* A7.i - lekkie zaburzenie balansu (|+1| lub |-1|) */
-		s->bal = a;				/* 	czyli drzewo uroslo */
-		return u;
-	} else if(s->bal == -a) {			/* A7.ii - wstawienie poprawilo balans drzewa */
-		s->bal = 0;
-		return u;
-	}						/* A7.iii - zaburzenie balansu (|+2| lub |-2|) */
-	if(r->bal == a ) {				/* A8. pojedyncza rotacja */
-		d = a<0?0:1;			/* wybierz kierunek */
-		p = r;				/* rotuj w lewo/prawo (|a| = |+1|/|-1|) wokol |s| */
-		s->l[d] = r->l[!d];
-		r->l[!d] = s;
-		s->bal = r->bal = 0;
-	} else {					/* A9. podwojna rotacja */
-		d = a<0?0:1;
-		p = r->l[1-d];			/* rotuj w prawo/lewo (|a| = |+1|/|-1|) wokol |r| */
-		r->l[!d] = p->l[d];		/* a nastepne */
-		p->l[d] = r;			/* rotuj w lewo/prawo (|a| = |+1|/|-1|) wokol |r| */
-		s->l[d] = p->l[!d];
-		p->l[!d] = s;		/* wartosci balansu |s| i |r| zaleza od podprzypadkow:
-						(|s->bal|,|r->bal|) = $\left\{\matrix{
-							(-a,0) & p->bal = a \hfill \cr
-							(0,0) & p->bal = 0 \hfill \cr
-							(0,+a) & p->bal = -a\hfill
-						}\right.$ */
-		s->bal = r->bal = 0;
-		if(p->bal == a)
-			s->bal = -a;
-		else if(p->bal == -a)
-			r->bal = a;
-	}
-	if(head == t)
-		(*R) = p;			/* jesli rotacja zmienila korzen to operuj na korzeniu */
-	else
-		t->l[s == t->l[1]] = p;		/* wpp popraw wskazanie od ojca |p| */
-	delete head;				/* pozbycie sie |head| */
-	return u;				/* zwroc wskaznik do dodanego wierzcholka */
 }
-
 
 
 @q ================================================================================ @>
 
 
-
-
-
-@* Odpowiedz na query.
-
-Zaklepac LCA.
-
-@<Query@>=
 
 
 @*References.
 \bibstart
 
-\bibitem{knuth}
-Donald Knuth, Sztuka Programowania, Tom 3 (oryg. The Art of Computer Programming).
 \bibitem{bern}
 Algorytm djb2 autorstwa Donalda Bernsteina.
 
 Kod znaleziony na stronie
 \pdfURL{http://www.cse.yorku.ca/\~{}oz/hash.html}.
-\bibitem{jwalker}
-Julienne Walker,
-\pdfURL{www.eternallyconfuzzled.com/tuts/datastructures/jsw\_tut\_avl.aspx}.
 \bibend
