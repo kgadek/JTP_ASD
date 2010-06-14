@@ -22,8 +22,8 @@ Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich ins
 (w zaleznosci od sytuacji).
 
 |INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
-
-|HASHSIZE| okresla rozmiar tablicy hashujacej (82837429 = 79M).
+|HASHSIZE| okresla rozmiar tablicy hashujacej (82837429 = 79M). Wazny jest fakt, iz
+jest to liczba pierwsza.
 
 @d INPUTLEN 100
 @d HASHSIZE 82837429
@@ -39,31 +39,30 @@ Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich ins
 
 int main() {
 	@<Inicjacja zmiennych@>@;
-	i=0; // i=0 - nie policzylismy jeszcze par LCA
 	while( 1 ) {
 		if( fgets(input,INPUTLEN,stdin) == NULL )
 			break;
 		@<Wstepnie przetworz tekst@>@;
 		@<Zdobadz pointery do osob@>@;
 		if( R[0]==':') {
-			if(!i) {
-				i=1; // i policz pary LCA
+			if(!queryPart) {
+				queryPart = 1; // i policz pary LCA
 			}
 			// query
 		} else {
 			switch(R[1]) {
 			case 'r': if(R[5]=='p')
-					  make_grandparent(xx,yy);
+					  make_grandparent(*xx,*yy);
 				  else
-					  make_grandparent(yy,xx);
+					  make_grandparent(*yy,*xx);
 				break;
-			case 'o': make_cousin(xx,yy);
+			case 'o': make_cousin(*xx,*yy);
 				break;
-			case 'i': make_sibling(xx,yy);
+			case 'i': make_sibling(*xx,*yy);
 				break;
-			case 'a': make_child(yy,xx);
+			case 'a': make_child(*yy,*xx);
 				break;
-			case 'h': make_child(xx,yy);
+			case 'h': make_child(*xx,*yy);
 			}
 		}
 	}
@@ -80,10 +79,15 @@ rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 (imie i nazwisko osoby Y). Po przetworzeniu do |X| trafia polaczone imie i nazwisko
 (analogicznie |Y|).
 
+|int i| jest pomocniczym licznikiem. |int queryPart| informuje, czy nastapila
+sekcja z pytaniami o \break pokrewienstwo. |osoba *hashtab[]| jest tablica hashujaca
+wspomagajaca wyszukiwanie rozpatrywanej osoby.
+
 @<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
 osoba *hashtab[HASHSIZE];
 int i;
+int queryPart = 0;
 osoba **xx,**yy;
 
 
@@ -118,31 +122,34 @@ Sluzy jako obiekt w 3 strukturach danych: w tablicy hashujacej, w drzewie
 |char *name| jest wskaznikiem na imie i nazwisko danej osoby (alokacja pamieci i kopiowanie
 w konstruktorze) lub wskaznikiem na |*nn| (napis |"NN"|).
 
-Wskaznik |osoba *n| pelni dwie
-funkcje:
+Wskaznik |osoba *n| pelni dwie funkcje
+{
+\parindent = 60 pt
 \item{1.} gdy dany obiekt jest sztuczny, to |*n| wskazuje na |*this|.
 \item{2.} gdy obiekt jest konkretna osoba, to wskazuje na nastepny obiekt |osoba| w tablicy
-hashujacej.
-
+hashujacej
+}
 |osoba *p| wskazuje na ojca w drzewie genealogicznym, natomiast |*s| wskazuje na jego
-prawego brata.
+prawego brata. W |osoba **r| zapamietany jest adres wskaznika na |*this| od ojca lub
+lewego brata.
 
-W lesie zbiorow rozlacznych uzywane sa wskazniki |osoba *l| - wskaznik na lidera grupy,
-|int rank| - ranga.
+W lesie zbiorow rozlacznych uzywany jest wskaznik |osoba *l| na lidera grupy, oraz
+|int rank| - ranga danej osoby.
 
 @<Definicje struktur@>=
 char nn[] = {'N','N',0};
 class osoba {
 public:
 	char *name;		/* imie i nazwisko */
-	osoba  *n,		/* tablica hashujaca:	nastepny element kolizji */
-	       *p,		/* drzew genealogiczne:	ojciec*/
-	       *c,		/* 			syn */
-	       *s,		/* 			(prawy) brat */
-	       *l;		/* las zbiorow rozlacznych: 	wskazanie na ojca */
-	int rank;		/* 				ranga */
-	osoba() : name(nn), n(NULL), p(NULL), s(NULL), l(this), rank(0) { }
-	osoba(char *in) : n(NULL), p(NULL), s(NULL), l(this), rank(0) {
+	osoba  *n,		/* w tablicy hashujacej:	nastepny element kolizji */
+	       *p, *c, *s, **r,	/* w drzewie genealogicznym:	ojciec. syn, prawy brat,
+				 	wskaznik na ta osobe od ojca lub lewego brata */
+	       *l;		/* w lesie zbiorow rozlacznych:	wskazanie na ojca, */
+	int rank;		/* w lesie zbiorow rozlacznych:	ranga */
+	osoba() : name(NULL), n(NULL), p(NULL), s(NULL), r(NULL), l(this), rank(0) {
+		name = nn;
+	}
+	osoba(char *in) : n(NULL), p(NULL), s(NULL), r(NULL), l(this), rank(0) {
 		name = new char[strlen(in)+1];
 		strcpy(name,in);
 	}
@@ -161,7 +168,9 @@ public:
 
 
 
-@* Obsluga tablicy hashujacej.
+@* Tablica hashujaca.
+
+Na wstepie wymaga tylko wyczyszczenia.
 
 @<Inicjacja zmiennych@>=
 for(i=0;i<HASHSIZE;++i)
@@ -171,18 +180,18 @@ for(i=0;i<HASHSIZE;++i)
 
 @ Przeszukiwanie tablicy hashujacej.
 
-Po wykonaniu ciagu tych polecen, w |osoba **xx| jak i w |osoba **yy| beda znajdowac
+W wyniku dzialania ponizszego kodu, w |osoba **xx| jak i w |osoba **yy| beda znajdowac
 sie wskazania na pointery do szukanych osob (niezaleznie, czy dana osoba wczesniej
 byla rozpatrywana czy nie).
 
 @<Zdobadz pointery do osob@>=
 xx = (hashtab+getHash(X));
-while((*xx) && strcmp((*xx)->name,X))
+while((*xx) && (*xx)->name && strcmp((*xx)->name,X))
 	xx = &((*xx)->n);
 if((*xx)==NULL)
 	(*xx) = new osoba(X);
 yy = (hashtab+getHash(Y));
-while((*yy) && strcmp((*yy)->name,Y))
+while((*yy) && (*yy)->name && strcmp((*yy)->name,Y))
 	yy = &((*yy)->n);
 if((*yy)==NULL)
 	(*yy) = new osoba(Y);
@@ -204,39 +213,194 @@ unsigned int getHash(char *str) {
 
 @q ================================================================================ @>
 
+
 @* Drzewo genealogiczne.
 
+Operacja laczenia wierzcholkow |**x@t$\ \rightarrow\ $@>**y|. Zalozenia
+(utrzymane po wykonaniu kazdej petli):
+{
+\parindent = 60 pt
+\item{1.} |x!=NULL!=y|.
+\item{2.} |*x!=NULL|.
+\item{3.} laczone wierzcholki nie sa jednoczesnie pelnymi osobami.
+}
 
-
-@ Operacja laczenia wierzcholkow.
-Zaklada, ze oba parametry '|osoba **x|' i '|osoba **y|' nie wskazuja na NULL. Operacja
-|join(osoba **x,osoba **y)| powoduje wlaczenie osoby |*y| do osoby |*x| poprzez:
-\item{A1.} przepisanie dzieci osoby |*y| do osoby |*x|
-\item{A2.} wywolanie |join()| na ojcach |*x| i |*y|.
+Operacja |join(**x,**y)| powoduje polaczenie osoby |**x| z osoba |**y| poprzez
+wykonanie:
+{
+\parindent = 60 pt
+\item{A1.} przepisanie dzieci osoby |**y| do osoby |**x|
+\item{A2.} usuniecie zbednej osoby (wypelniajacej) |**y|, poprawienie wskaznika |*y|
+by wskazywal |(*y)->p|
+\item{A3.} wywolanie w gore drzewa (warunki sprawdzane w podanej kolejnosci):
+\itemitem{A3.1.} gdy |*y==NULL| - zakonczenie
+\itemitem{A3.2.} gdy |*x==NULL| - zamien ojca |**x| na ojca |**y|, popraw
+wskaznik od ojca |**y| i zakoncz
+\itemitem{A3.3.} gdy |**y| nie jest wypelniaczem - zamien ojcow miejscami i
+|join()| na ojcach
+\itemitem{A3.4.} wpp - polacz rodzicow
+}
 
 @<Definicje funkcji@>=
 void join(osoba **x, osoba **y) {
-	osoba *t, **u;
-	while(1) {				/* A1.	Przepinanie dzieci */
-		t = (*x)->c;			/* 	|t| - stare dziecki |*x| */
-		(*x)->c = (*y)->c;		/* 	zastap dzieci |*x| przez
-							dzieci |*y| */
+	/*dbg*/printf("join\n");
+	osoba *t, **u, *v;
+	while(*y != NULL) {			/* A1.	Przepinanie dzieci */
+		t = (*x)->c;			/* 	|t| - stary syn |**x| */
+		(*x)->c = (*y)->c;		/* 	zastap synow |**x| przez
+							synow |**y| */
+		u = &((*x)->c);
+		if(*u)				/* 	popraw |**r| u nowego syna |**x| */
+			(*u)->r = u;
 		while(*u) {			/* 	popraw wskazanie na ojca
-							nowym dzieciom |*x| */
+							nowym synom |**x| */
 			(*u)->p = (*x);
 			u = &((*u)->s);
 		}
-		(*u) = t;			/* 	dolacz stare dzieci |*x| */
-		if(!((*y)->p))			/* A2.	Wywolywanie w gore drzewa */
-			return;			/* 	nic wiecej do zrobienia */
-		x = &((*x)->p);
-		y = &((*y)->p);
-		if(!(*x) || (*y)->n != (*y)) {	/* 	jesli trzeba zlaczyc
-							wierzcholki w druga strone, tj.
-							|x@t$\rightarrow$@>y| */
-			u = x; x = y; y = u;
+		(*u) = t;			/* 	dolacz starych synow |**x| */
+		if(t)				/* 	popraw |**r| u starego syna |**x| */
+			t->r = u;
+		if((*y)->r)			/* 	usun |*y| z listy synow jego ojca */
+			(*((*y)->r)) = (*y)->s;
+		if((*y)->s)			/* 	popraw |*r| u jego prawego brata */
+			(*y)->s->r = (*y)->r;
+		v = (*y)->p;			/* 	zapamietaj ojca |*y| w |*t| */
+		delete (*y);			/* A2.	Usuniecie |*y| */
+		y = &v;
+		if((*x)->p == NULL && (*y)) {	/* A3.2. |**x| nie ma ojca */
+			(*x)->p = v;		/* 	ustal |v| ojcem |**x| */
+			(*x)->s = v->c;		/* 	dodaj |**x| do synow |v| */
+			v->c = (*x);
+			return;			/* 	zakoncz */
 		}
+		x = &((*x)->p);			/* ustal |x| na wskaznik na ojca od starego |**x| */
+		if((*y) && (*y)->name != nn) {	/* A3.3. |*y| nie jest wypelniaczem */
+			u = x; x = y; y = u;	/* 	zamien |x| i |y| miejscami */
+		} 
 	}
+}
+
+
+
+@ Operacja laczenia syna z ojcem.
+
+Najpierw sprawdza (A1), czy |y| juz nie jest synem |x|. Gdy tak nie jest, to dopisuje |y|
+do listy dzieci |x| i - o ile to konieczne - (A2) wywoluje |join| na rodzicach |x| i |y|.
+
+TODO: (A1) poprzez |x->p == y|
+
+@<Definicje funkcji@>=
+void make_child(osoba *x, osoba *y) {
+	/*dbg*/printf("make_child\n");
+	osoba *t;
+	if(x->p == y)				/* A1.	Sprawdzenie, czy |x| juz jest
+						 	synem |y|... */
+		return;				/* 	...jest wiec zakoncz */
+	if(x->p)				/* 	|x| ma rodzine */
+		join(&y,&(x->p));
+	else {					/* 	|x| jest izolowany */
+		t = y->c;
+		y->c = x;
+		x->p = y;
+		x->r = &(y->c);
+		x->s = t;
+		if(t)
+			t->r = &(x->s);
+	}
+}
+
+
+
+@ Operacja laczenia braci.
+
+Zalozenia:
+{
+\parindent = 60 pt
+\item{1.} |x!=NULL!=y|
+\item{2.} wejscie jest poprawne (nie powstana cykle etc)
+}
+Istnieje kilka przypadkow
+{
+\parindent = 60 pt
+\item{A1.} zarowno |x| jak i |y| sa izolowane (bez rodziny)
+\item{A2.} dokladnie jedno z |x| i |y| jest izolowane
+\item{A3.} |x| i |y| posiadaja (rozne) rodziny
+}
+
+@<Definicje funkcji@>=
+void make_sibling(osoba *x, osoba *y) {
+	/*dbg*/printf("make_sibling\n");
+	osoba *t;
+	if(!(x->r) && !(y->r)) {		/* A1. Przypadek prosty */
+		t = new osoba;			/* 	tworzymy ojca-wypelniacza */
+		t->c = x;			/* 	podpinamy |x|, |y|
+						 	jako synow */
+		x->r = &(t->c);
+		x->s = y;
+		y->r = &(x->s);
+		x->p = y->p = t;
+	} else if(!(x->r) || !(y->r)) {		/* A2. Przypadek sredni */
+		if(!(x->r)) {			/* 	ustalamy |x| - ma rodzine */
+			t = x; x = y; y = t;
+		}
+		t = x->p->c;
+		x->p->c = y;
+		y->r = &(x->p->c);
+		y->s = t;
+		t->r = &(y->s);
+
+	} else {				/* A3. Przypadek trudny... */
+		if(x->p->name == nn)		/* 	...znowu okazal sie latwy
+							dzieki |join()| */
+			join(&y,&x);
+		else
+			join(&x,&y);
+	}
+}
+
+
+
+@ Operacja laczenia dziadka z wnukiem.
+
+@<Definicje funkcji@>=
+void make_grandparent(osoba *x, osoba *y) {
+	/*dbg*/printf("make_grandparent\n");
+	osoba *t;
+	if(y->p)
+		t = y->p;
+	else {
+		t = new osoba;
+		y->p = t;
+		t->c = y;
+		y->r = &(t->c);
+	}
+	make_child(t,x);
+}
+
+
+
+@ Nienapisane jeszcze operacje...
+
+@<Definicje funkcji@>=
+void make_cousin(osoba *x, osoba *y) {
+	/*dbg*/printf("make_cousin\n");
+	osoba *t,*u;
+	if(!(t = x->p)) {
+		t = new osoba;
+		t->c = x;
+		x->p = t;
+		x->r = &(t->c);
+	}
+	if(!(u = y->p)) {
+		u = new osoba;
+		u->c = y;
+		y->p = u;
+		y->r = &(u->c);
+	}
+	if(u->name!=nn)
+		make_sibling(u,t);
+	else
+		make_sibling(t,u);
 }
 
 
