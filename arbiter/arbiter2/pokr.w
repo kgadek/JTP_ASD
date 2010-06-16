@@ -48,7 +48,7 @@ int main() {
 			if(!queryPart) {
 				queryPart = 1; // i policz pary LCA
 			}
-			// query
+			query(*xx,*yy);
 		} else {
 			switch(R[1]) {
 			case 'r': if(R[5]=='p')
@@ -65,6 +65,7 @@ int main() {
 			case 'h': make_child(*xx,*yy);
 			}
 		}
+		/*dbg*/printf("\n");
 	}
 	return 0;
 }
@@ -146,10 +147,12 @@ public:
 				 	wskaznik na ta osobe od ojca lub lewego brata */
 	       *l;		/* w lesie zbiorow rozlacznych:	wskazanie na ojca, */
 	int rank;		/* w lesie zbiorow rozlacznych:	ranga */
-	osoba() : name(NULL), n(NULL), p(NULL), s(NULL), r(NULL), l(this), rank(0) {
+	osoba() : name(NULL), n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+				l(this), rank(0) {
 		name = nn;
 	}
-	osoba(char *in) : n(NULL), p(NULL), s(NULL), r(NULL), l(this), rank(0) {
+	osoba(char *in) : name(NULL), n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+				l(this), rank(0) {
 		name = new char[strlen(in)+1];
 		strcpy(name,in);
 	}
@@ -244,11 +247,18 @@ wskaznik od ojca |**y| i zakoncz
 @<Definicje funkcji@>=
 void join(osoba **x, osoba **y) {
 	/*dbg*/printf("join\n");
-	osoba *t, **u, *v;
+	osoba *t, **u, *v, *w, *xxx, *yyy;
 	while(*y != NULL) {			/* A1.	Przepinanie dzieci */
+		xxx = *x;
+		yyy = *y;
+		x = &xxx;
+		y = &yyy;
+		if(*x == *y)
+			return;
 		t = (*x)->c;			/* 	|t| - stary syn |**x| */
 		(*x)->c = (*y)->c;		/* 	zastap synow |**x| przez
 							synow |**y| */
+		(*y)->c = NULL;			/* 	odcinamy synow od |**y| */
 		u = &((*x)->c);
 		if(*u)				/* 	popraw |**r| u nowego syna |**x| */
 			(*u)->r = u;
@@ -260,16 +270,20 @@ void join(osoba **x, osoba **y) {
 		(*u) = t;			/* 	dolacz starych synow |**x| */
 		if(t)				/* 	popraw |**r| u starego syna |**x| */
 			t->r = u;
-		if((*y)->r)			/* 	usun |*y| z listy synow jego ojca */
+		if((*y)->r && (*((*y)->r)) != (*y)) /* 	usun |*y| z listy synow jego ojca */
 			(*((*y)->r)) = (*y)->s;
 		if((*y)->s)			/* 	popraw |*r| u jego prawego brata */
 			(*y)->s->r = (*y)->r;
-		v = (*y)->p;			/* 	zapamietaj ojca |*y| w |*t| */
+		w = (*y)->p;			/* 	zapamietaj ojca |*y| w |*t| */
 		delete (*y);			/* A2.	Usuniecie |*y| */
+		v = w;
 		y = &v;
 		if((*x)->p == NULL && (*y)) {	/* A3.2. |**x| nie ma ojca */
 			(*x)->p = v;		/* 	ustal |v| ojcem |**x| */
+			(*x)->r = &(v->c);
 			(*x)->s = v->c;		/* 	dodaj |**x| do synow |v| */
+			if((*x)->s)
+				(*x)->s->r = &((*x)->s);
 			v->c = (*x);
 			return;			/* 	zakoncz */
 		}
@@ -296,9 +310,12 @@ void make_child(osoba *x, osoba *y) {
 	if(x->p == y)				/* A1.	Sprawdzenie, czy |x| juz jest
 						 	synem |y|... */
 		return;				/* 	...jest wiec zakoncz */
-	if(x->p)				/* 	|x| ma rodzine */
-		join(&y,&(x->p));
-	else {					/* 	|x| jest izolowany */
+	if(x->p) {				/* 	|x| ma rodzine */
+		if(y->name != nn)
+			join(&y,&(x->p));
+		else
+			join(&(x->p),&y);
+	} else {				/* 	|x| jest izolowany */
 		t = y->c;
 		y->c = x;
 		x->p = y;
@@ -331,7 +348,7 @@ Istnieje kilka przypadkow
 void make_sibling(osoba *x, osoba *y) {
 	/*dbg*/printf("make_sibling\n");
 	osoba *t;
-	if(!(x->r) && !(y->r)) {		/* A1. Przypadek prosty */
+	if(!(x->p) && !(y->p)) {		/* A1. Przypadek prosty */
 		t = new osoba;			/* 	tworzymy ojca-wypelniacza */
 		t->c = x;			/* 	podpinamy |x|, |y|
 						 	jako synow */
@@ -339,12 +356,13 @@ void make_sibling(osoba *x, osoba *y) {
 		x->s = y;
 		y->r = &(x->s);
 		x->p = y->p = t;
-	} else if(!(x->r) || !(y->r)) {		/* A2. Przypadek sredni */
-		if(!(x->r)) {			/* 	ustalamy |x| - ma rodzine */
+	} else if(!(x->p) || !(y->p)) {		/* A2. Przypadek sredni */
+		if(!(x->p)) {			/* 	ustalamy |x| - ma rodzine */
 			t = x; x = y; y = t;
 		}
 		t = x->p->c;
 		x->p->c = y;
+		y->p = x->p;
 		y->r = &(x->p->c);
 		y->s = t;
 		t->r = &(y->s);
@@ -352,9 +370,9 @@ void make_sibling(osoba *x, osoba *y) {
 	} else {				/* A3. Przypadek trudny... */
 		if(x->p->name == nn)		/* 	...znowu okazal sie latwy
 							dzieki |join()| */
-			join(&y,&x);
+			join(&(y->p),&(x->p));
 		else
-			join(&x,&y);
+			join(&(x->p),&(y->p));
 	}
 }
 
@@ -379,7 +397,7 @@ void make_grandparent(osoba *x, osoba *y) {
 
 
 
-@ Nienapisane jeszcze operacje...
+@ Operacja laczenia osoby z jej kuzynem.
 
 @<Definicje funkcji@>=
 void make_cousin(osoba *x, osoba *y) {
@@ -404,7 +422,16 @@ void make_cousin(osoba *x, osoba *y) {
 }
 
 
+
+
 @q ================================================================================ @>
+
+
+@* Obsluga zapytania o osoby.
+
+@<Definicje funkcji@>=
+void query(osoba *x, osoba *y) {
+}
 
 
 
