@@ -427,6 +427,55 @@ void make_cousin(osoba *x, osoba *y) {
 @q ================================================================================ @>
 
 
+
+
+@* Las zbiorów rozłącznych.
+
+Znajdowanie lidera. Operacja makeSet wpisana w konstruktor klasy |osoba|.
+
+@<Definicje funkcji@>=
+osoba* findSet(osoba *x) {
+	if(x != x->l)
+		x->l = findSet(x->l);
+	return x->l;
+}
+
+
+
+@ Operacja UNION.
+
+@<Definicje funkcji@>=
+void link(osoba *x, osoba *y) {
+	x = findSet(x);
+	y = findSet(y);
+	if(x->rank > y->rank)
+		y->l = x;
+	else {
+		x->l = y;
+		if(x->rank == y->rank)
+			++(y->rank);
+	}
+}
+
+
+
+
+
+@q ================================================================================ @>
+
+
+@* Znajdowanie najnizszego wspolnego przodka (LCA).
+
+Algorytm off-line Tarjana.
+
+@<Definicje funkcji@>=
+void tarjan() {
+}
+
+
+@q ================================================================================ @>
+
+
 @* Obsluga zapytania o osoby.
 
 @<Definicje funkcji@>=
