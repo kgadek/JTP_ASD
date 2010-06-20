@@ -14,12 +14,13 @@
 \def\cite#1{[\csname#1\endcsname]}
 \def\xcite#1#2{[\csname#1\endcsname, #2]}
 \def\bern{1}
+\def\bcpss{2}
 
 
-@* Rdzen programu.
 
-Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich instrukcji
-(w zaleznosci od sytuacji).
+@* Naglowek programu.
+
+Pliki nagłówkowe i definicje stalych uzytych w programie.
 
 |INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
 |HASHSIZE| okresla rozmiar tablicy hashujacej (82837429 = 79M). Wazny jest fakt, iz
@@ -33,28 +34,6 @@ jest to liczba pierwsza.
 #include <cstring>
 #include <cassert>
 
-@<Definicje struktur@>@;
-@<Zmienne globalne@>@;
-@<Definicje funkcji@>@;
-
-int main() {
-	@<Inicjacja zmiennych@>@;
-	while( 1 ) {
-		if( fgets(input,INPUTLEN,stdin) == NULL )
-			break;
-		@<Wstepnie przetworz tekst@>@;
-		@<Zdobadz pointery do osob@>@;
-		if( R[0]==':' ) {
-			if(!queryPart) {
-				queryPart = 1; // i policz pary LCA
-			}
-			query(*xx,*yy);
-		} else {
-			@<Powiaz osoby na podstawie |*R|@>@;
-		}
-	}
-	return 0;
-}
 
 
 
@@ -66,16 +45,59 @@ rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 (imie i nazwisko osoby Y). Po przetworzeniu do |X| trafia polaczone imie i nazwisko
 (analogicznie |Y|).
 
-|int i| jest pomocniczym licznikiem. |int queryPart| informuje, czy nastapila
-sekcja z pytaniami o \break pokrewienstwo. |osoba *hashtab[]| jest tablica hashujaca
-wspomagajaca wyszukiwanie rozpatrywanej osoby.
+|int n| jest licznikiem osob obecnie wystepujacych w drzewie - zarowno wypelniaczy
+jak i tych pelnych, wymienionych z imienia na wejsciu.
+|int ecnt| wskazuje na nastepne wolne miejsce w tablicy |osoba *E@t$\ldots$@>|.
+|int tid| (unikalnie) numeruje poddrzewa.
 
-@<Zmienne globalne@>=
+|osoba *hashtab[@t$\ldots$@>]| jest tablica hashujaca wspomagajaca wyszukiwanie
+rozpatrywanych osob. Wyszukiwanie jest pierwsza operacja wykonywana zarowno przy
+przetwarzaniu opisu rodowego jak i przy przetwarzaniu zapytania.
+
+@c
+class infoSet;
+class osoba;
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
-osoba *hashtab[HASHSIZE];
-int i;
-int queryPart = 0;
-osoba **xx,**yy;
+int n = 0, tid = 0;
+int ecnt;
+osoba *hashtab[HASHSIZE], **xx,**yy, *r;
+
+
+
+
+@ Procedura main.
+
+Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich instrukcji
+(w zaleznosci od sytuacji).
+
+@c
+@<Definicje struktur@>@;
+@<Definicje funkcji@>@;
+int main() {
+	@#
+	@<Inicjacja zmiennych@>@;
+
+
+
+
+@ Przetwarzanie danych.
+
+Wczytuje opis relacji z wejscia.
+
+Konczy petle w dwoch wypadkach: gdy nie ma juz nic na wejsciu lub gdy rozpoczeto
+podawanie zapytan o pokrewienstwo osob (pytanie o najnizszego wspolnego przodka).
+
+@c
+while( 1 ) {
+	if( fgets(input,INPUTLEN,stdin) == NULL )
+		break;
+	@<Wstepnie przetworz tekst@>@;
+	if( R[0]==':' )
+		break;
+	@<Zdobadz pointery do osob@>@;
+	@<Dodaj brakujace osoby@>@;	/* tylko jesli dane osoby wczesniej nie wystapily */
+	@<Powiaz osoby na podstawie |*R|@>@;
+}
 
 
 
@@ -92,26 +114,42 @@ strcat(Y,Ya);
 
 
 
-@ Odpalanie mechanizmow wiazacych osoby w drzewie.
+@ Przetwarzanie zapytan.
 
-Na wejsciu dostalismy opis relacji dwoch osob: |**xx| i |**yy|. Teraz rozrozniamy,
-jakiego typu jest to relacja.
-
-@<Powiaz osoby na podstawie |*R|@>=
-switch(R[1]) {
-	case 'r': if(R[5]=='p') @#
-			make_grandparent(*xx,*yy);
-		else @#
-			make_grandparent(*yy,*xx);
-		break;
-	case 'o': make_cousin(*xx,*yy);
-		break;
-	case 'i': make_sibling(*xx,*yy);
-		break;
-	case 'a': make_child(*yy,*xx);
-		break;
-	case 'h': make_child(*xx,*yy);
+@c
+if(R[0] == ':') {
+	do {
+		@<Wstepnie przetworz tekst@>@;
+		@<Zdobadz pointery do osob@>@;
+		if((*xx)->i == NULL && (*yy)->i == NULL) {
+						/* Ani dla |**xx| ani |**yy| nie zostal
+						   wykonany preprocessing */
+			@<Preprocessing poddrzewa |**x|@>@;
+			if((*yy)->i == NULL)	/* dla |**yy| nadal nie zostal wykonany
+						   preprocessing zatem nie moze miec z |**xx|
+						   wspolnego przodka */
+				printf("NN\n");
+			else 			/* wyznacz LCA na podstawie RMQ */
+				printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
+		} else if((*yy)->i != (*xx)->i)	/* |**x| i |**y| sa w innych poddrzewach (lub
+						 dla |**y| nie zostal wykonany preprocessing) */
+			printf("NN\n");
+		else
+			printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
+	} while( fgets(input,INPUTLEN,stdin) != NULL );
 }
+
+
+
+
+@ Zakonczenie programu
+
+W sumie przydaloby sie oczyscic pamiec dokladniej ale co tam :P
+
+@c
+	return 0; @#
+}
+
 
 
 
@@ -141,33 +179,45 @@ Wskaznik |osoba *n| pelni dwie funkcje
 hashujacej
 }
 |osoba *p| wskazuje na ojca w drzewie genealogicznym, natomiast |*s| wskazuje na jego
-prawego brata. W |osoba **r| zapamietany jest adres wskaznika na |*this| od ojca lub
+prawego brata.
+W |osoba **r| zapamietany jest adres wskaznika na |*this| od ojca lub
 lewego brata.
 
-W lesie zbiorow rozlacznych uzywany jest wskaznik |osoba *l| na lidera grupy, oraz
-|int rank| - ranga danej osoby.
+|int i| jest unikalnym numerem przydzielanym przez |globTreeIdCnt| dla kazdego spojnego
+obszaru.
+|l| okresla glebokosc, na ktorej znajduje sie dana osoba. Sluzy takze jako
+wskaznik koloru przy przechodzeniu drzewa przez DFS: wartosc |t=0| oznacza, ze
+wierzcholek byl nieodwiedzony (bialy), |t<0| - jest przetwarzany (szary),
+|t>0| - zostal juz przetworzony (czarny).
+|e| wskazuje na pozycje reprezentanta danej osoby w tablicy |**E|.
+
 
 @<Definicje struktur@>=
 char nn[] = {'N','N',0};
 class osoba {
 public:
 	char *name;		/* imie i nazwisko */
-	osoba  *n,		/* w tablicy hashujacej:	nastepny element kolizji */
-	       *p, *c, *s, **r,	/* w drzewie genealogicznym:	ojciec. syn, prawy brat,
-				 	wskaznik na wskaznik na siebie od ojca lub lewego brata */
-	       *l;		/* w lesie zbiorow rozlacznych:	wskazanie na ojca, */
-	int rank;		/* w lesie zbiorow rozlacznych:	ranga */
-	osoba() : name(NULL), n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
-				l(this), rank(0) {
-		name = nn;
+	osoba  *n,		/* w tablicy hashujacej: nastepny element kolizji */
+	       *p, *c, *s, **r;	/* w drzewie:		 ojciec. syn, prawy brat,
+				 	wskaznik na wskaznik na siebie od lewego brata lub ojca */
+	infoSet *i;
+	int l, e;		/* w LCA:		 glebokosc danej osoby
+				   	w poddrzewie genealogicznym, pozycja reprezentanta */
+	@#
+	@#
+	osoba()@+ : name(NULL),
+		n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+		i(NULL), l(0), e(0) {
+		name = nn; @+
 	}
-	osoba(char *in) : name(NULL), n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
-				l(this), rank(0) {
+	osoba(char *in)@+ : name(NULL),
+		n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+		i(NULL), l(0), e(0) {
 		name = new char[strlen(in)+1];
 		strcpy(name,in);
 	}
-	~osoba() {
-		if(name!=nn) delete [] name;
+	~osoba()@+ { @+
+		if(name!=nn) delete [] name; @+
 	}
 };
 
@@ -186,7 +236,7 @@ public:
 Na wstepie wymaga tylko wyczyszczenia.
 
 @<Inicjacja zmiennych@>=
-for(i=0;i<HASHSIZE;++i)
+for(int i=0;i<HASHSIZE;++i)
 	hashtab[i]=NULL;
 
 
@@ -194,20 +244,32 @@ for(i=0;i<HASHSIZE;++i)
 @ Przeszukiwanie tablicy hashujacej.
 
 W wyniku dzialania ponizszego kodu, w |osoba *xx| jak i w |osoba *yy| beda znajdowac
-sie wskazania na pointery do szukanych osob (niezaleznie, czy dana osoba wczesniej
-byla rozpatrywana czy nie).
+sie wskazania na pointery do szukanych osob (o ile sa w tablicy).
 
 @<Zdobadz pointery do osob@>=
 xx = hashtab+getHash(X);
 while(*xx && strcmp((*xx)->name,X))
 	xx = &((*xx)->n);
-if((*xx)==NULL)
-	(*xx) = new osoba(X);
 yy = hashtab+getHash(Y);
 while(*yy && strcmp((*yy)->name,Y))
 	yy = &((*yy)->n);
-if((*yy)==NULL)
+
+
+
+
+@ Dodaj jesli danych osob nie ma.
+
+Gdy brakuje jakichs osob w tablicy hashujacej to je dodaj.
+
+@<Dodaj brakujace osoby@>=
+if((*xx)==NULL) {
+	(*xx) = new osoba(X);
+	++n;
+}
+if((*yy)==NULL) {
 	(*yy) = new osoba(Y);
+	++n;
+}
 
 
 
@@ -275,6 +337,7 @@ void join(osoba *x, osoba *y) {
 			y->s->r = y->r;
 		v = y->p;			/* 	zapamietaj ojca |*y| w |*t| */
 		delete y;			/* A2.	Usuniecie |*y| */
+		--n;
 		y = v;
 		if(x->p == NULL && y) {		/* A3.2. |**x| nie ma ojca */
 			x->p = y;		/* 	ustal |v| ojcem |**x| */
@@ -346,6 +409,7 @@ void make_sibling(osoba *x, osoba *y) {
 	osoba *t;
 	if(!(x->p) && !(y->p)) {		/* A1. Przypadek prosty */
 		t = new osoba;			/* 	tworzymy ojca-wypelniacza */
+		++n;
 		t->c = x;			/* 	podpinamy |x|, |y|
 						 	jako synow */
 		x->r = &(t->c);
@@ -383,6 +447,7 @@ void make_grandparent(osoba *x, osoba *y) {
 		t = y->p;
 	else {
 		t = new osoba;
+		++n;
 		y->p = t;
 		t->c = y;
 		y->r = &(t->c);
@@ -399,12 +464,14 @@ void make_cousin(osoba *x, osoba *y) {
 	osoba *t,*u;
 	if(!(t = x->p)) {
 		t = new osoba;
+		++n;
 		t->c = x;
 		x->p = t;
 		x->r = &(t->c);
 	}
 	if(!(u = y->p)) {
 		u = new osoba;
+		++n;
 		u->c = y;
 		y->p = u;
 		y->r = &(u->c);
@@ -417,55 +484,140 @@ void make_cousin(osoba *x, osoba *y) {
 
 
 
+@ Odpalanie mechanizmow wiazacych osoby w drzewie.
 
-@q ================================================================================ @>
+Na wejsciu dostalismy opis relacji dwoch osob: |**xx| i |**yy|. Teraz rozrozniamy,
+jakiego typu jest to relacja.
 
-
-
-
-@* Las zbiorów rozłącznych.
-
-Znajdowanie lidera. Operacja makeSet wpisana w konstruktor klasy |osoba|.
-
-@<Definicje funkcji@>=
-osoba* findSet(osoba *x) {
-	if(x != x->l)
-		x->l = findSet(x->l);
-	return x->l;
+@<Powiaz osoby na podstawie |*R|@>=
+switch(R[1]) {
+	case 'r': if(R[5]=='p') @#
+			make_grandparent(*xx,*yy);
+		else @#
+			make_grandparent(*yy,*xx);
+		break;
+	case 'o': make_cousin(*xx,*yy);
+		break;
+	case 'i': make_sibling(*xx,*yy);
+		break;
+	case 'a': make_child(*yy,*xx);
+		break;
+	case 'h': make_child(*xx,*yy);
 }
 
 
 
-@ Operacja UNION.
 
-@<Definicje funkcji@>=
-void link(osoba *x, osoba *y) {
-	x = findSet(x);
-	y = findSet(y);
-	if(x->rank > y->rank)
-		y->l = x;
-	else {
-		x->l = y;
-		if(x->rank == y->rank)
-			++(y->rank);
+
+@q ================================================================================ @>
+
+
+@* Wyznaczanie LCA/RMQ.
+
+Wyznaczanie najnizszego wspolnego przodka (Lowest Common Ancestor) mozna sprowadzic
+do problemu znajdowania minimum przedzialu (Range Minimum Query).
+
+@d MTAB (r->i->M)
+@d ETAB (r->i->E)
+@<Preprocessing poddrzewa |**x|@>=
+r = *xx;
+while(r->p)
+	r = r->p;	/* Znajdz korzen poddrzewa */
+r->i = new infoSet(r);
+dfs(r,1);		/* wypelnia tablice |osoba *E[1@t$\ldots$@>N]| */
+for(int i=0;i<2*(r->i->N)-1;++i)
+	r->i->M[i][0] = i;
+
+/* (dynamicznie) wypelnia tablice |int M[1@t$\ldots$@>N][1@t$\ldots$@>lN]| */
+for(int j=1, i, k=1;j<=(r->i->lN);++j,k<<=1) {		/* niezmiennik: |@t$k=2^{j-1}$@>| */
+	for(i=0;i<2*(r->i->N)-1;++i) {
+		if(i+k<2*(r->i->N)-1 && ETAB[MTAB[i+k][j-1]]->l < ETAB[MTAB[i][j-1]]->l)
+			MTAB[i][j] = MTAB[i+k][j-1];
+		else
+			MTAB[i][j] = MTAB[i][j-1];
 	}
 }
 
 
 
-
-
-@q ================================================================================ @>
-
-
-@q ================================================================================ @>
-
-
-@* Obsluga zapytania o osoby.
+@ Wyznaczanie RMQ poddrzewa.
 
 @<Definicje funkcji@>=
-void query(osoba *x, osoba *y) {
+int RMQ(infoSet *is, int a, int b) {
+	int k,l;
+	if(a>b) {
+		k=a; a=b; b=k;
+	}
+	for(k=0,l=1;l+a<=b;l<<=1,++k) ;
+			/* Wyznaczamy |k=@t$\left\lceil \log_2 (j-i+1) \right\rceil$@>|
+			   oraz |l=@t$2^k$@>| */
+	--k;
+	l>>=1;
+	if(is->E[is->M[a][k]]->l < is->E[is->M[b-l][k]]->l)
+		return is->M[a][k];
+	return is->M[b-l][k];
 }
+
+
+
+@ Struktura przechowujaca wyniki preprocessingu dla poddrzew.
+
+@<Definicje struktur@>=
+int dfs_licz(osoba *x) {
+	int res = 1;
+	for(osoba *it = x->c; it!=NULL; it = it->s)
+		res += dfs_licz(it);
+	return res;
+}
+class infoSet{
+public:
+	osoba **E;
+	int **M;
+	int N,lN;
+	infoSet(osoba *in) : E(NULL), M(NULL), N(0), lN(0) {
+		int i,j,k;
+		N = dfs_licz(in);		/* wyznacz licznosc poddrzewa */
+		k = 2*N-1;
+		for(i=1,j=0; i<k; i<<=1,++j)
+			if(i & k) lN = j;
+			/* dla |N!=0|: |lN=@t$\left\lfloor\log_2 (2N-1)\right\rfloor$@>| */
+		E = new osoba*[2*N-1];
+		M = new int*[2*N-1];
+		for(i=0;i<2*N-1;++i)
+			M[i] = new int[lN+1];
+	}
+	~infoSet() {
+		delete [] E;
+		if(M) {
+			for(int i=0;i<N;++i)
+				delete [] M[i];
+			delete [] M;
+		}
+	}
+};
+
+@ Funkcja przegladania drzewa.
+
+Wypelnia jednoczesnie tablice |osoba *E[@t$1\ldots 2N-1$@>]|
+
+@<Definicje funkcji@>=
+void dfs(osoba *x,int lvl) {
+	x->i = r->i;
+	x->e = ecnt;
+	x->l = -(lvl++);
+	x->i->E[ecnt++] = x;
+	for(osoba *it = x->c; it!=NULL; it = it->s) {
+		dfs(it,lvl);
+		x->i->E[ecnt++] = x;
+	}
+	x->l = -(x->l);
+}
+
+
+
+
+
+@q ================================================================================ @>
 
 
 
@@ -478,4 +630,7 @@ Algorytm djb2 autorstwa Donalda Bernsteina.
 
 Kod znaleziony na stronie
 \pdfURL{http://www.cse.yorku.ca/\~{}oz/hash.html}.
+\bibitem{bcpss}
+Michael~A.~Bender, Martín~Farach-Colton, Giridhar~Pemmasani, Steven~Skiena, Pavel~Sumazin.
+Lowest Common Ancestors in Trees and Directed Acyclic Graphs.
 \bibend
