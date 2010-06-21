@@ -1,8 +1,6 @@
-\input graphicx
+%\input graphicx
 %\includegraphics[width=16ex]{test}
 % Uzycie: mpost plik --> epstopdf plik
-\def\cee/{C}
-\def\cpp/{\cee/{\tt++}}
 \newdimen\biblioindent\biblioindent=.25in
 \def\bibitem#1{\par\medskip\noindent
 	\hangindent=\biblioindent
@@ -18,23 +16,105 @@
 
 
 
-@* Naglowek programu.
+@* Zadanie ,,Porewienstwo''.
+\hfill\break
+{\bf Format pliku wejsciowego}\hfill\break
+Poszczególne linie pliku maja foramat:\par
+{\narrower\it imie nazwisko pokrewienstwo imie nazwisko}\par
+gdzie pokrewienstwo moze przyjmowac jeden z nastepujacych opisów:\par
+{\narrower\parindent = 0 in
+{\it grandparent-of}, oznaczajacy ze pierwsza osoba jest dziadkiem drugiej\hfill\break
+{\it grandchild-of}, oznaczajacy ze pierwsza osoba jest wnukiem drugiej\hfill\break
+{\it cousin-of}, oznaczajacy ze dwie osoby maja tego samego dziadka\hfill\break
+{\it sibling-of}, oznaczajacy ze dwie osoby maja tego samego ojca\hfill\break
+{\it parent-of}, oznaczajacy ze pierwsza osoba jest ojcem drugiej\hfill\break
+{\it child-of}, oznaczajacy ze pierwsza osoba dzieckiem drugiej\hfill\break
+{\it :}, oznaczajacy pytanie o najblizsze pokrewienstwo dwu osób
+\par
+}
+{\parindent = 0 in
+Plik wejsciowy jest podzielony na dwie sekcje. Sekcja opisujaca wzajemne
+pokrewienstwo, oraz sekcja z pytaniami o pokrewienstwo. Sekcje wystepuja
+bezposrednio po sobie (dane z dwu sekcji nie sa wymieszane).}
 
-Pliki nagłówkowe i definicje stalych uzytych w programie.
+\hfill\break
+{\bf Format pliku wyjsciowego}\hfill\break
+W pliku wyjsciowym nalezy umiescic imiona i nazwiska najblizszego przodka osob
+dla ktorych zostaly zadane pytania. Odpowiedzi nalezy umieszczac w pojedynczych
+liniach. W przypadku braku odpowiedzi nalezy wypisac tekst NN. Kolejnosc odpowiedzi
+powinna byc zgodna z kolejnoscia zadawania pytan.
 
-|INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
-|HASHSIZE| okresla rozmiar tablicy hashujacej (82837429 = 79M). Wazny jest fakt, iz
-jest to liczba pierwsza.
+\hfill\break
+{\bf Dodatkowe informacje}\hfill\break
+Plik wejsciowy nie jest wiekszy niz 100MB. Dostepna pamiec to 1GB.
+Pierwotny limit czasu dla kazdego testu wynosi 4s (czas ten moze ulec
+wydluzeniu w kolejnych etapach).
+W zadaniu nie mozna uzywac STL!
 
-@d INPUTLEN 100
-@d HASHSIZE 82837429
+\hfill\break
+{\bf Przykladowe wejscie}\hfill\break
+{
+Chwalislaw Zgornik grandchild-of Konradyna Retke\hfill\break
+Mirogniew Zwiesiulski cousin-of Chwalislaw Zgornik\hfill\break
+Jaroslawa Wieclawik parent-of Nunilona Chernik\hfill\break
+Ostap Wyhadanczuk child-of Nunilona Chernik\hfill\break
+Nunilona Chernik sibling-of Patrycja Zagala\hfill\break
+Mirogniew Zwiesiulski sibling-of Nunilona Chernik\hfill\break
+Ubald Ankikiel child-of Patrycja Zagala\hfill\break
+Herkules Geglawy parent-of Krzysztofa Kurzyl\hfill\break
+Chwalislaw Zgornik sibling-of Krzysztofa Kurzyl\hfill\break
+Nunilona Chernik : Patrycja Zagala\hfill\break
+Mirogniew Zwiesiulski : Ubald Ankikiel\hfill\break
+Ostap Wyhadanczuk : Chwalislaw Zgórnik
+}
+
+\hfill\break
+{\bf Przykladowe wyjscie}\hfill\break
+Jaroslawa Wieclawik\hfill\break
+Jaroslawa Wieclawik\hfill\break
+Konradyna Retke
+
+
+@* Rozwiazanie zadania.
+
 @c
+@<Pliki naglowkowe@>@;
+@<pokr.h@>@;
+@<Zmienne globalne@>@;
+@<Procedura main@>@;
+@<Definicje skladowych klasy |osoba|@>@;
+@<Definicje skladowych klasy |infoSet|@>@;
+@<Definicje funkcji@>@;
+
+
+@ Pliki naglowkowe uzyte w programie.
+@<Pliki naglowkowe@>=
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <cassert>
 
 
+
+@ Deklaracje funkcji i klas.
+
+Umieszczamy je w pliku \.{pokr.cpp}, ale i tak dolaczymy je bezposrednio w \.{pokr.cpp}
+,,bo mozemy''.
+
+@s osoba int
+@s infoSet int
+@(pokr.h@>=
+class osoba;
+class infoSet;
+@<Definicja klasy |osoba|@>@;
+@<Definicja klasy |infoSet|@>@;
+unsigned int getHash(char*);
+void join(osoba*,osoba*);
+void make_child(osoba*,osoba*);
+void make_sibling(osoba*,osoba*);
+void make_grandparent(osoba*,osoba*);
+void make_cousin(osoba*,osoba*);
+int RMQ(infoSet*,int,int);
+int dfs_licz(osoba*);
+void dfs(osoba*,int);
 
 
 
@@ -44,22 +124,20 @@ Zmienna |input| (o dlugosci |INPUTLEN|) przechwytuje caly napis wejsciowy. Ten n
 rozbijany na |X| (imie i nazwisko osoby X), |R| (relacja miedzy X a Y) oraz |Y|
 (imie i nazwisko osoby Y). Po przetworzeniu do |X| trafia polaczone imie i nazwisko
 (analogicznie |Y|).
+|int ecnt| jest pomocnicza zmienna wskazujaca na nastepne wolne miejsce w wybranej tablicy
+|osoba *E[@t$\ldots$@>]|.
+Tablica hashujaca |osoba *hashtab[HASHSIZE]| wspomaga wyszukiwanie
+rozpatrywanych osob.
 
-|int n| jest licznikiem osob obecnie wystepujacych w drzewie - zarowno wypelniaczy
-jak i tych pelnych, wymienionych z imienia na wejsciu.
-|int ecnt| wskazuje na nastepne wolne miejsce w tablicy |osoba *E@t$\ldots$@>|.
-|int tid| (unikalnie) numeruje poddrzewa.
+|INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
+|HASHSIZE| okresla rozmiar tablicy hashujacej (|@t$27612423\rightarrow 91,46$@>|MB).
+Wazny jest fakt, iz jest to liczba pierwsza.
 
-|osoba *hashtab[@t$\ldots$@>]| jest tablica hashujaca wspomagajaca wyszukiwanie
-rozpatrywanych osob. Wyszukiwanie jest pierwsza operacja wykonywana zarowno przy
-przetwarzaniu opisu rodowego jak i przy przetwarzaniu zapytania.
-
-@c
-class infoSet;
-class osoba;
+@d INPUTLEN 100
+@d HASHSIZE 27612423
+@<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
-int n = 0, tid = 0;
-int ecnt;
+int n = 0, ecnt;
 osoba *hashtab[HASHSIZE], **xx,**yy, *r;
 
 
@@ -67,36 +145,47 @@ osoba *hashtab[HASHSIZE], **xx,**yy, *r;
 
 @ Procedura main.
 
-Zadaniem |main| jest wczytanie danych wejsciowych i wywolywanie odpowiednich instrukcji
-(w zaleznosci od sytuacji).
+|int main()| wczytuje zarowno opis relacji osob jak i wykonuje preprocessing
+spojnych poddrzew (do szybkiego znajdowania wspolnego przodka) gdy zachodzi taka potrzeba,
+a nastepnie znajduje najnizszego wspolnego przodka dwoch osob.
 
-@c
-@<Definicje struktur@>@;
-@<Definicje funkcji@>@;
+@<Procedura main@>=
 int main() {
-	@#
 	@<Inicjacja zmiennych@>@;
-
-
-
-
-@ Przetwarzanie danych.
-
-Wczytuje opis relacji z wejscia.
-
-Konczy petle w dwoch wypadkach: gdy nie ma juz nic na wejsciu lub gdy rozpoczeto
-podawanie zapytan o pokrewienstwo osob (pytanie o najnizszego wspolnego przodka).
-
-@c
-while( 1 ) {
-	if( fgets(input,INPUTLEN,stdin) == NULL )
-		break;
-	@<Wstepnie przetworz tekst@>@;
-	if( R[0]==':' )
-		break;
-	@<Zdobadz pointery do osob@>@;
-	@<Dodaj brakujace osoby@>@;	/* tylko jesli dane osoby wczesniej nie wystapily */
-	@<Powiaz osoby na podstawie |*R|@>@;
+	while(1) {
+		if( fgets(input,INPUTLEN,stdin) == NULL)
+			break;
+		@<Wstepnie przetworz tekst@>@;
+		@<Zdobadz pointery do osob@>@;
+		if( R[0] == ':')
+			break;
+		@<Dodaj brakujace osoby@>@;
+		@<Powiaz osoby na podstawie |*R|@>@;
+	}
+	if(R[0] == ':') {
+		while(1) {
+			if((*xx)->i == NULL && (*yy)->i == NULL) {
+							/* Ani dla |**xx| ani |**yy| nie zostal
+							   wykonany preprocessing */
+				@<Preprocessing poddrzewa |**x|@>@;
+				if((*yy)->i == NULL)	/* dla |**yy| nadal nie zostal wykonany
+							   preprocessing zatem nie moze miec z |**xx|
+							   wspolnego przodka */
+					printf("NN\n");
+				else 			/* wyznacz LCA na podstawie RMQ */
+					printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
+			} else if((*yy)->i != (*xx)->i)	/* |**x| i |**y| sa w innych poddrzewach (lub
+							 dla |**y| nie zostal wykonany preprocessing) */
+				printf("NN\n");
+			else
+				printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
+			if( fgets(input,INPUTLEN,stdin) == NULL)
+				break;
+			@<Wstepnie przetworz tekst@>@;
+			@<Zdobadz pointery do osob@>@;
+		}
+	}
+	return 0;
 }
 
 
@@ -110,53 +199,6 @@ strcat(X," ");	/* polacz |X| i |Xa| w jedno */
 strcat(X,Xa);
 strcat(Y," ");	/* polacz |Y| i |Ya| w jedno */
 strcat(Y,Ya);
-
-
-
-
-@ Przetwarzanie zapytan.
-
-@c
-if(R[0] == ':') {
-	do {
-		@<Wstepnie przetworz tekst@>@;
-		@<Zdobadz pointery do osob@>@;
-		if((*xx)->i == NULL && (*yy)->i == NULL) {
-						/* Ani dla |**xx| ani |**yy| nie zostal
-						   wykonany preprocessing */
-			@<Preprocessing poddrzewa |**x|@>@;
-			if((*yy)->i == NULL)	/* dla |**yy| nadal nie zostal wykonany
-						   preprocessing zatem nie moze miec z |**xx|
-						   wspolnego przodka */
-				printf("NN\n");
-			else 			/* wyznacz LCA na podstawie RMQ */
-				printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
-		} else if((*yy)->i != (*xx)->i)	/* |**x| i |**y| sa w innych poddrzewach (lub
-						 dla |**y| nie zostal wykonany preprocessing) */
-			printf("NN\n");
-		else
-			printf("%s\n",(*xx)->i->E[RMQ((*xx)->i,(*xx)->e,(*yy)->e)]->name);
-	} while( fgets(input,INPUTLEN,stdin) != NULL );
-}
-
-
-
-
-@ Zakonczenie programu
-
-W sumie przydaloby sie oczyscic pamiec dokladniej ale co tam :P
-
-@c
-	return 0; @#
-}
-
-
-
-
-
-@q ================================================================================ @>
-
-
 
 
 
@@ -191,8 +233,7 @@ wierzcholek byl nieodwiedzony (bialy), |t<0| - jest przetwarzany (szary),
 |t>0| - zostal juz przetworzony (czarny).
 |e| wskazuje na pozycje reprezentanta danej osoby w tablicy |**E|.
 
-
-@<Definicje struktur@>=
+@<Definicja klasy |osoba|@>=
 char nn[] = {'N','N',0};
 class osoba {
 public:
@@ -204,29 +245,30 @@ public:
 	int l, e;		/* w LCA:		 glebokosc danej osoby
 				   	w poddrzewie genealogicznym, pozycja reprezentanta */
 	@#
-	@#
-	osoba()@+ : name(NULL),
-		n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
-		i(NULL), l(0), e(0) {
-		name = nn; @+
-	}
-	osoba(char *in)@+ : name(NULL),
-		n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
-		i(NULL), l(0), e(0) {
-		name = new char[strlen(in)+1];
-		strcpy(name,in);
-	}
-	~osoba()@+ { @+
-		if(name!=nn) delete [] name; @+
-	}
+	osoba();
+	osoba(char*);
+	~osoba();
 };
 
 
 
+@ Funkcje skladowe.
 
-@q ================================================================================ @>
-
-
+@<Definicje skladowych klasy |osoba|@>=
+osoba::osoba()@+ : name(NULL),
+	n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+	i(NULL), l(0), e(0) {
+	name = nn; @+
+}
+osoba::osoba(char *in)@+ : name(NULL),
+	n(NULL), p(NULL), c(NULL), s(NULL), r(NULL),
+	i(NULL), l(0), e(0) {
+	name = new char[strlen(in)+1];
+	strcpy(name,in);
+}
+osoba::~osoba()@+ { @+
+	if(name!=nn) delete [] name; @+
+}
 
 
 
@@ -238,6 +280,19 @@ Na wstepie wymaga tylko wyczyszczenia.
 @<Inicjacja zmiennych@>=
 for(int i=0;i<HASHSIZE;++i)
 	hashtab[i]=NULL;
+
+
+
+@ Funkcja hashujaca djb2~\cite{bern}.
+
+@<Definicje funkcji@>=
+unsigned int getHash(char *str) {
+	unsigned int ret = 5381;
+	while(*str)
+		ret = ((ret << 5) + ret) ^ (*(str++));
+				/* |@t$hash_i = hash_{i-1}*33 \oplus str[i]$@>| */
+	return ret % HASHSIZE;	/* obciecie wyniku */
+}
 
 
 
@@ -259,7 +314,8 @@ while(*yy && strcmp((*yy)->name,Y))
 
 @ Dodaj jesli danych osob nie ma.
 
-Gdy brakuje jakichs osob w tablicy hashujacej to je dodaj.
+Gdy brakuje jakichs osob w tablicy hashujacej to ponizszy kod je doda. Dla uproszczenia
+tego etapu, w programie operujemy na podwojnych wskaznikach.
 
 @<Dodaj brakujace osoby@>=
 if((*xx)==NULL) {
@@ -274,24 +330,9 @@ if((*yy)==NULL) {
 
 
 
-@ Funkcja hashujaca djb2~\cite{bern}.
-
-@<Definicje funkcji@>=
-unsigned int getHash(char *str) {
-	unsigned int ret = 5381;
-	while(*str)
-		ret = ((ret << 5) + ret) ^ (*(str++));
-				/* |@t$hash_i = hash_{i-1}*33 \oplus str[i]$@>| */
-	return ret % HASHSIZE;	/* obciecie wyniku */
-}
-
-
-@q ================================================================================ @>
-
-
 @* Drzewo genealogiczne.
 
-Operacja laczenia wierzcholkow |*x@t$\ \rightarrow\ $@>*y|. Zalozenia
+Operacja laczenia wierzcholkow |*x@t$\ \rightarrow\ $@>*y|. Zalozenie
 i jednoczesnie niezmiennik petli: |x!=NULL|
 
 Operacja |join(*x,*y)| powoduje polaczenie osoby |*x| z osoba |*y| poprzez
@@ -507,11 +548,6 @@ switch(R[1]) {
 
 
 
-
-
-@q ================================================================================ @>
-
-
 @* Wyznaczanie LCA/RMQ.
 
 Wyznaczanie najnizszego wspolnego przodka (Lowest Common Ancestor) mozna sprowadzic
@@ -539,8 +575,7 @@ for(int j=1, i, k=1;j<=(r->i->lN);++j,k<<=1) {		/* niezmiennik: |@t$k=2^{j-1}$@>
 }
 
 
-
-@ Wyznaczanie RMQ poddrzewa.
+@ Wyznaczanie RMQ ({\it Range Minimum Query}) poddrzewa.
 
 @<Definicje funkcji@>=
 int RMQ(infoSet *is, int a, int b) {
@@ -560,47 +595,20 @@ int RMQ(infoSet *is, int a, int b) {
 
 
 
-@ Struktura przechowujaca wyniki preprocessingu dla poddrzew.
+@ Funkcje przegladania drzewa.
 
-@<Definicje struktur@>=
+|int dfs_licz(@t$\ldots$@>)| wyznacza rozmiar poddrzewa zaczepionego w
+podanym korzeniu.
+|void dfs(@t$\ldots$@>)| przechodzi podane poddrzewo wypelniajac jednoczesnie
+tablice |osoba *E[@t$1\ldots 2N-1$@>]|
+
+@<Definicje funkcji@>=
 int dfs_licz(osoba *x) {
 	int res = 1;
 	for(osoba *it = x->c; it!=NULL; it = it->s)
 		res += dfs_licz(it);
 	return res;
 }
-class infoSet{
-public:
-	osoba **E;
-	int **M;
-	int N,lN;
-	infoSet(osoba *in) : E(NULL), M(NULL), N(0), lN(0) {
-		int i,j,k;
-		N = dfs_licz(in);		/* wyznacz licznosc poddrzewa */
-		k = 2*N-1;
-		for(i=1,j=0; i<k; i<<=1,++j)
-			if(i & k) lN = j;
-			/* dla |N!=0|: |lN=@t$\left\lfloor\log_2 (2N-1)\right\rfloor$@>| */
-		E = new osoba*[2*N-1];
-		M = new int*[2*N-1];
-		for(i=0;i<2*N-1;++i)
-			M[i] = new int[lN+1];
-	}
-	~infoSet() {
-		delete [] E;
-		if(M) {
-			for(int i=0;i<N;++i)
-				delete [] M[i];
-			delete [] M;
-		}
-	}
-};
-
-@ Funkcja przegladania drzewa.
-
-Wypelnia jednoczesnie tablice |osoba *E[@t$1\ldots 2N-1$@>]|
-
-@<Definicje funkcji@>=
 void dfs(osoba *x,int lvl) {
 	x->i = r->i;
 	x->e = ecnt;
@@ -614,6 +622,45 @@ void dfs(osoba *x,int lvl) {
 }
 
 
+
+
+@* Klasa |infoSet| - struktura przechowujaca wyniki preprocessingu drzew.
+
+@<Definicja klasy |infoSet|@>=
+class infoSet{
+public:
+	osoba **E;
+	int **M;
+	int N,lN;
+	infoSet(osoba*);
+	~infoSet();
+};
+
+
+
+@ Konstruktor i destruktor klasy.
+
+@<Definicje skladowych klasy |infoSet|@>=
+infoSet::infoSet(osoba *in) : E(NULL), M(NULL), N(0), lN(0) {
+	int i,j,k;
+	N = dfs_licz(in);		/* wyznacz licznosc poddrzewa */
+	k = 2*N-1;
+	for(i=1,j=0; i<k; i<<=1,++j)
+		if(i & k) lN = j;
+		/* dla |N!=0|: |lN=@t$\left\lfloor\log_2 (2N-1)\right\rfloor$@>| */
+	E = new osoba*[2*N-1];
+	M = new int*[2*N-1];
+	for(i=0;i<2*N-1;++i)
+		M[i] = new int[lN+1];
+}
+infoSet::~infoSet() {
+	delete [] E;
+	if(M) {
+		for(int i=0;i<N;++i)
+			delete [] M[i];
+		delete [] M;
+	}
+}
 
 
 
