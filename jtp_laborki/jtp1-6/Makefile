@@ -10,7 +10,7 @@ PKGNAME	= GadekKonrad-jtp1-6.tgz
 clean:
 	rm -f *.o $(PKGNAME) *~ *swp
 
-all: punkty.o
+all: punkty.o polygon.o
 
 pkg: clean 
 	tar -zcf $(PKGNAME) $(SRC)

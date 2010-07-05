@@ -1,5 +1,5 @@
 #include <vector>
-#include "punkty.h"
+#include "polygon.h"
 
 Polygon::Polygon() {
 	it = p.begin();
@@ -27,7 +27,7 @@ Punkt Polygon::show_next() {
 	return *it + w;
 }
 
-bool Polygon::show_end() {
+bool Polygon::show_end() const {
 	return it == p.end();
 }
 
