@@ -13,22 +13,23 @@
 \def\xcite#1#2{[\csname#1\endcsname, #2]}
 \def\bern{1}
 \def\bcpss{2}
+\def\br{\hfill\break}
 
 
 
 @* Zadanie ,,Porewienstwo''.
-\hfill\break
-{\bf Format pliku wejsciowego}\hfill\break
+\br
+{\bf Format pliku wejsciowego}\br
 Poszczególne linie pliku maja foramat:\par
 {\narrower\it imie nazwisko pokrewienstwo imie nazwisko}\par
 gdzie pokrewienstwo moze przyjmowac jeden z nastepujacych opisów:\par
 {\narrower\parindent = 0 in
-{\it grandparent-of}, oznaczajacy ze pierwsza osoba jest dziadkiem drugiej\hfill\break
-{\it grandchild-of}, oznaczajacy ze pierwsza osoba jest wnukiem drugiej\hfill\break
-{\it cousin-of}, oznaczajacy ze dwie osoby maja tego samego dziadka\hfill\break
-{\it sibling-of}, oznaczajacy ze dwie osoby maja tego samego ojca\hfill\break
-{\it parent-of}, oznaczajacy ze pierwsza osoba jest ojcem drugiej\hfill\break
-{\it child-of}, oznaczajacy ze pierwsza osoba dzieckiem drugiej\hfill\break
+{\it grandparent-of}, oznaczajacy ze pierwsza osoba jest dziadkiem drugiej\br
+{\it grandchild-of}, oznaczajacy ze pierwsza osoba jest wnukiem drugiej\br
+{\it cousin-of}, oznaczajacy ze dwie osoby maja tego samego dziadka\br
+{\it sibling-of}, oznaczajacy ze dwie osoby maja tego samego ojca\br
+{\it parent-of}, oznaczajacy ze pierwsza osoba jest ojcem drugiej\br
+{\it child-of}, oznaczajacy ze pierwsza osoba dzieckiem drugiej\br
 {\it :}, oznaczajacy pytanie o najblizsze pokrewienstwo dwu osób
 \par
 }
@@ -37,41 +38,41 @@ Plik wejsciowy jest podzielony na dwie sekcje. Sekcja opisujaca wzajemne
 pokrewienstwo, oraz sekcja z pytaniami o pokrewienstwo. Sekcje wystepuja
 bezposrednio po sobie (dane z dwu sekcji nie sa wymieszane).}
 
-\hfill\break
-{\bf Format pliku wyjsciowego}\hfill\break
+\br
+{\bf Format pliku wyjsciowego}\br
 W pliku wyjsciowym nalezy umiescic imiona i nazwiska najblizszego przodka osob
 dla ktorych zostaly zadane pytania. Odpowiedzi nalezy umieszczac w pojedynczych
 liniach. W przypadku braku odpowiedzi nalezy wypisac tekst NN. Kolejnosc odpowiedzi
 powinna byc zgodna z kolejnoscia zadawania pytan.
 
-\hfill\break
-{\bf Dodatkowe informacje}\hfill\break
+\br
+{\bf Dodatkowe informacje}\br
 Plik wejsciowy nie jest wiekszy niz 100MB. Dostepna pamiec to 1GB.
 Pierwotny limit czasu dla kazdego testu wynosi 4s (czas ten moze ulec
 wydluzeniu w kolejnych etapach).
 W zadaniu nie mozna uzywac STL!
 
-\hfill\break
-{\bf Przykladowe wejscie}\hfill\break
+\br
+{\bf Przykladowe wejscie}\br
 {
-Chwalislaw Zgornik grandchild-of Konradyna Retke\hfill\break
-Mirogniew Zwiesiulski cousin-of Chwalislaw Zgornik\hfill\break
-Jaroslawa Wieclawik parent-of Nunilona Chernik\hfill\break
-Ostap Wyhadanczuk child-of Nunilona Chernik\hfill\break
-Nunilona Chernik sibling-of Patrycja Zagala\hfill\break
-Mirogniew Zwiesiulski sibling-of Nunilona Chernik\hfill\break
-Ubald Ankikiel child-of Patrycja Zagala\hfill\break
-Herkules Geglawy parent-of Krzysztofa Kurzyl\hfill\break
-Chwalislaw Zgornik sibling-of Krzysztofa Kurzyl\hfill\break
-Nunilona Chernik : Patrycja Zagala\hfill\break
-Mirogniew Zwiesiulski : Ubald Ankikiel\hfill\break
+Chwalislaw Zgornik grandchild-of Konradyna Retke\br
+Mirogniew Zwiesiulski cousin-of Chwalislaw Zgornik\br
+Jaroslawa Wieclawik parent-of Nunilona Chernik\br
+Ostap Wyhadanczuk child-of Nunilona Chernik\br
+Nunilona Chernik sibling-of Patrycja Zagala\br
+Mirogniew Zwiesiulski sibling-of Nunilona Chernik\br
+Ubald Ankikiel child-of Patrycja Zagala\br
+Herkules Geglawy parent-of Krzysztofa Kurzyl\br
+Chwalislaw Zgornik sibling-of Krzysztofa Kurzyl\br
+Nunilona Chernik : Patrycja Zagala\br
+Mirogniew Zwiesiulski : Ubald Ankikiel\br
 Ostap Wyhadanczuk : Chwalislaw Zgórnik
 }
 
-\hfill\break
-{\bf Przykladowe wyjscie}\hfill\break
-Jaroslawa Wieclawik\hfill\break
-Jaroslawa Wieclawik\hfill\break
+\br
+{\bf Przykladowe wyjscie}\br
+Jaroslawa Wieclawik\br
+Jaroslawa Wieclawik\br
 Konradyna Retke
 
 
@@ -96,7 +97,7 @@ Konradyna Retke
 
 @ Deklaracje funkcji i klas.
 
-Umieszczamy je w pliku \.{pokr.cpp}, ale i tak dolaczymy je bezposrednio w \.{pokr.cpp}
+Umieszczamy je w pliku \.{pokr.h}, ale i tak dolaczymy je bezposrednio w \.{pokr.cpp}
 ,,bo mozemy''.
 
 @s osoba int
@@ -104,8 +105,10 @@ Umieszczamy je w pliku \.{pokr.cpp}, ale i tak dolaczymy je bezposrednio w \.{po
 @(pokr.h@>=
 class osoba;
 class infoSet;
+class chunk;
 @<Definicja klasy |osoba|@>@;
 @<Definicja klasy |infoSet|@>@;
+@<Definicja klasy |chunk|@>@;
 unsigned int getHash(char*);
 void join(osoba*,osoba*);
 void make_child(osoba*,osoba*);
@@ -132,13 +135,20 @@ rozpatrywanych osob.
 |INPUTLEN| definiuje wielkosc alokowanego miejsca dla imienia i nazwiska.
 |HASHSIZE| okresla rozmiar tablicy hashujacej (|@t$27612423\rightarrow 91,46$@>|MB).
 Wazny jest fakt, iz jest to liczba pierwsza.
+|int chunkSize| przechowuje rozmiar kawalkow na ktore dzielone jest tablica (przy obliczaniu
+LCA/RMQ). Poczatkowo ma wartosc 0.
+
+|int chunkSize| to rozmiar kawalkow tablicy w uzytym algorytmie na LCA (RMQ). |int chunks| to
+ilosc takich kawalkow w tablicy ( nastepuje |chunks = @t$2^{chunkSize}$@>| lub
+|chunkSize==1@t$\iff \left\lfloor\log_2 N\right\rfloor = 0$@>| ).
 
 @d INPUTLEN 100
 @d HASHSIZE 27612423
 @<Zmienne globalne@>=
 char input[INPUTLEN], X[INPUTLEN], Xa[INPUTLEN], R[INPUTLEN], Y[INPUTLEN], Ya[INPUTLEN];
-int n = 0, ecnt;
+int n = 0, ecnt, chunkSize = 0, chunks;
 osoba *hashtab[HASHSIZE], **xx,**yy, *r;
+int **minFrom, **minTo;
 
 
 
@@ -163,6 +173,7 @@ int main() {
 		@<Powiaz osoby na podstawie |*R|@>@;
 	}
 	if(R[0] == ':') {
+		@<Preprocessing drzewa@>@;
 		while(1) {
 			if((*xx)->i == NULL && (*yy)->i == NULL) {
 							/* Ani dla |**xx| ani |**yy| nie zostal
@@ -205,9 +216,9 @@ strcat(Y,Ya);
 
 @* Klasa |osoba|.
 
-Zmienna |nn| przechowuje wskaznik na napis |"NN"|.
+Zmienna globalna |nn| przechowuje wskaznik na napis |"NN"|.
 
-Sluzy jako obiekt w 3 strukturach danych: w tablicy hashujacej, w drzewie
+Klasa |osoba| sluzy jako obiekt w 3 strukturach danych: w tablicy hashujacej, w drzewie
 (genealogicznym) i w lesie zbiorow rozlacznych.
 
 |char *name| jest wskaznikiem na imie i nazwisko danej osoby (alokacja pamieci i kopiowanie
@@ -332,10 +343,10 @@ if((*yy)==NULL) {
 
 @* Drzewo genealogiczne.
 
-Operacja laczenia wierzcholkow |*x@t$\ \rightarrow\ $@>*y|. Zalozenie
+Operacja laczenia wierzcholkow |*x@t$\ \leftarrow\ $@>*y|. Zalozenie
 i jednoczesnie niezmiennik petli: |x!=NULL|
 
-Operacja |join(*x,*y)| powoduje polaczenie osoby |*x| z osoba |*y| poprzez
+Operacja |join(*x,*y)| powoduje polaczenie osoby |*y| z osoba |*x| poprzez
 wykonanie:
 {
 \parindent = 60 pt
@@ -402,8 +413,6 @@ void join(osoba *x, osoba *y) {
 
 Najpierw sprawdza (A1), czy |y| juz nie jest synem |x|. Gdy tak nie jest, to dopisuje |y|
 do listy dzieci |x| i - o ile to konieczne - (A2) wywoluje |join| na rodzicach |x| i |y|.
-
-TODO: (A1) poprzez |x->p == y|
 
 @<Definicje funkcji@>=
 void make_child(osoba *x, osoba *y) {
@@ -557,8 +566,7 @@ do problemu znajdowania minimum przedzialu (Range Minimum Query).
 @d ETAB (r->i->E)
 @<Preprocessing poddrzewa |**x|@>=
 r = *xx;
-while(r->p)
-	r = r->p;	/* Znajdz korzen poddrzewa */
+while(r->p) r = r->p;	/* Znajdz korzen poddrzewa */
 r->i = new infoSet(r);
 dfs(r,1);		/* wypelnia tablice |osoba *E[1@t$\ldots$@>N]| */
 for(int i=0;i<2*(r->i->N)-1;++i)
@@ -574,6 +582,22 @@ for(int j=1, i, k=1;j<=(r->i->lN);++j,k<<=1) {		/* niezmiennik: |@t$k=2^{j-1}$@>
 	}
 }
 
+
+@ Obliczenia wstepne dla calego drzewa.
+
+Wyznacza |chunkSize@t$= max\{\left\lfloor \log_2 N \right\rfloor,1\}$@>|
+
+@d MAX(a,b) ((a)>(b)?(a):(b))
+@<Preprocessing drzewa@>=
+chunkSize = 0;
+for(chunks = 1; chunks <= n; chunks <<= 1) ++chunkSize;
+chunkSize = MAX(chunkSize-1,1);
+minFrom = new int*[chunks];
+minTo = new int*[chunks];
+for(int i=0;i<chunks;++i) {
+	minFrom[i] = new int[chunkSize];
+	minTo[i] = new int[chunkSize];
+}
 
 @ Wyznaczanie RMQ ({\it Range Minimum Query}) poddrzewa.
 
@@ -661,6 +685,20 @@ infoSet::~infoSet() {
 		delete [] M;
 	}
 }
+
+
+
+@q ================================================================================ @>
+
+@* Klasa |chunk|.
+
+@<Definicja klasy |chunk|@>=
+class chunk {
+public:
+	int kind;
+	unsigned int minTo(unsigned int);
+	unsigned int minFrom(unsigned int);
+};
 
 
 
