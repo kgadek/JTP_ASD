@@ -2,11 +2,7 @@
 *.o
 *.tgz
 *~
-b1
-b2
-b3
 _Makefile
-jtp1-2/outf
 tags
 *.dvi
 *.pdf
@@ -16,3 +12,6 @@ tags
 *.tex
 *.toc
 *.aux
+*.html
+*.css
+*.class
