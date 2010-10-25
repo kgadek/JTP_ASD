@@ -76,13 +76,15 @@ class Macierz {
 	}
 	public wspolrzedneMacierzy findZero() {
 		try {
-			for(int i=0;i<m;++i) {
-				for(int j=0;j<n;++j) {
+			int i=0,j=0;
+			escape:
+			for(i=0;i<m;++i) {
+				for(j=0;j<n;++j) {
 					if(tab[i][j] == 0)
-						return new wspolrzedneMacierzy(i,j,true);
+						break escape;
 				}
 			}
-			return new wspolrzedneMacierzy(0,0,false);
+			return new wspolrzedneMacierzy(i,j,i<m);
 		} catch( NiewlasciweWspolrzedneMacierzy e ) {
 			System.out.println("ZONK WEWNĘTRZNY!");
 			e.printStackTrace();
