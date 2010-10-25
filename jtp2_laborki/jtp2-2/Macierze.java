@@ -1,18 +1,24 @@
 import java.util.Random;
 
-class BledneParametry extends Exception {
+class mojeBledy extends Exception {
+	public mojeBledy(String msg) {
+		super(msg);
+	}
+}
+
+class BledneParametry extends mojeBledy {
 	public BledneParametry(String msg) {
 		super(msg);
 	}
 }
 
-class BlednyRozmiar extends Exception {
+class BlednyRozmiar extends mojeBledy {
 	public BlednyRozmiar(String msg) {
 		super(msg);
 	}
 }
 
-class NiewlasciweWspolrzedneMacierzy extends Exception {
+class NiewlasciweWspolrzedneMacierzy extends mojeBledy {
 	public NiewlasciweWspolrzedneMacierzy(String msg) {
 		super(msg);
 	}
@@ -126,35 +132,29 @@ public class Macierze {
 			if( args.length < 6 )
 				throw new BledneParametry("Podano za mało parametrów do programu!");
 			Macierz A, B, C;
-			A = new Macierz(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-			B = new Macierz(Integer.parseInt(args[2]), Integer.parseInt(args[3]));
 			Random rnd = new Random();
-
+			A = new Macierz(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
 			A.fillRandom(rnd);
-			B.fillRandom(rnd);
 			System.out.println("A=");
 			A.print();
+			B = new Macierz(Integer.parseInt(args[2]), Integer.parseInt(args[3]));
+			B.fillRandom(rnd);
 			System.out.println("B=");
 			B.print();
 			C = A.mul(B);
 			System.out.println("A*B=");
 			C.print();
 
-			pair found = A.findZero();
-			System.out.format("A.findZero() = (%d,%d)\n",found.x, found.y);
+			wspolrzedneMacierzy found = A.findZero();
+			if(found.isOk()) System.out.format("A.findZero() = (%d,%d)\n",found.x, found.y);
+			else System.out.format("A.findZero() = ---\n");
 			found = B.findZero();
-			System.out.format("B.findZero() = (%d,%d)\n",found.x, found.y);
+			if(found.isOk()) System.out.format("B.findZero() = (%d,%d)\n",found.x, found.y);
+			else System.out.format("B.findZero() = ---\n");
 
 			MacierzTrojkatna D = new MacierzTrojkatna(Integer.parseInt(args[4]), Integer.parseInt(args[5]));
 			D.fillRandom(rnd);
-
-		} catch( BlednyRozmiar e ) {
-			System.out.println("ZONK!");
-			e.printStackTrace();
-		} catch( BledneParametry e ) {
-			System.out.println("ZONK!");
-			e.printStackTrace();
-		} catch( NumberFormatException e ) {
+		} catch( mojeBledy e ) {
 			System.out.println("ZONK!");
 			e.printStackTrace();
 		}

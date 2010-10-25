@@ -15,6 +15,7 @@ clean:
 check_dirstruct:
 	[ -d bin ] || mkdir bin
 	[ -d doc ] || mkdir doc
+	[ -d src ] || mkdir doc
 
 doc:
 	#javadoc $(DOCFLAGS) $(SRC)
