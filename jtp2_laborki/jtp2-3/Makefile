@@ -1,16 +1,17 @@
 CXX	= javac
 CXXFLAGS =-encoding UTF-8 -g -verbose -d bin
 DOCFLAGS =-d doc
-SRC	= Tablica.java Tablica_wlasneWyjatki.java Macierze.java
-PKGNAME	= GadekKonrad-jtp2-2.tgz
+SRC	= Orkiestra.java
+PKGNAME	= GadekKonrad-jtp2-3.tar.7z
+PKGOPT	= -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on
 
-.PHONY: clean all pkg check_dirstruct doc
+.PHONY: clean all pkg doc check_dirstruct
 
 all: check_dirstruct $(SRC:.java=) doc
 
 clean:
 	rm -f $(PKGNAME) *~ .*.swp *.class
-	rm -rf doc bin
+	rm -rf doc bin src
 
 check_dirstruct:
 	[ -d bin ] || mkdir bin
@@ -21,7 +22,7 @@ doc:
 	#javadoc $(DOCFLAGS) $(SRC)
 
 pkg: clean 
-	tar -zcf $(PKGNAME) $(SRC) Makefile
+	tar cf - $(SRC) Makefile | 7za a -si $(PKGOPT) $(PKGNAME)
 
 %: %.java check_dirstruct
 	$(CXX) $(CXXFLAGS) $<

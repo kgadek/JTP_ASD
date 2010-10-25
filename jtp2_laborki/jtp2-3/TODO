@@ -1,0 +1,6 @@
+1) Przerobiæ orkiestrê tak, by by³a konstruowana na podstawie linii komend (wymy¶liæ jaki¶ sposób).
+   Class for name <-- jakby komu¶ siê chcia³o szukaæ...
+2) poznali¶my wzorzec singleton; poznali¶my mo¿liwo¶ci rozszerzenia singletona (np dziedziczenie); sposób zliczania
+   instancji mo¿e byæ ,,ciekawszy"/trudniejszy; problemem mog± byæ w±tki, sesje u¿ytkowników; czysto rozrywkowo napisaæ
+   implementacjê singletonu ,,rewolwer" - który ma 6 instancji (za pomoc± getInstance(), a po wywo³aniu 6 razy mamy dostaæ
+   ponownie pierwsz± etc).
