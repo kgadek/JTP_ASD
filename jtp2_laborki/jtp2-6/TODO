@@ -1,0 +1,32 @@
+Zadania domowe:
+__________________________________________________________________________________________
+
+1. Za³ó¿my relatywnie prosty zasób (np kolejka z popem zdejmuj±cym z randoma) chroniony.
+Ma jedn± metodê synchronizowan±. Do³o¿yæ taki warunek wait/notify i zrobiæ w±tki o niskim
+i wysokim priorytecie, by móc ustaliæ ile razy czê¶ciej w±tki o wysokim priorytecie mia³y
+dostêp do kolejki ni¿ te o niskim priorytecie.
+
+(* W±tki mog± mieæ priorytety przez setPriority... Ale to nie dzia³a. Ustaliæ swoje
+warunki priorytetów)
+
+
+2. Zasób ,,biblioteka". Wiele ksi±¿ek w bibliotece. W jednej chwili w bibliotece mo¿e byæ
+dowolna ilo¶æ czytelników. Tj. mamy read/??? których nie trzeba synchronizowaæ (bo s±
+read-only; pamiêtajmy, ¿e metody synchronized s± koooooooszmarnie wolne (kilkadziesi±t
+razy wolniejsze od normalnych)). Ale jak piszemy to...  Problem czytelników i pisarzy.
+Dowolny zasób mo¿e czytaæ dowolna ilo¶æ osób ale
+ - naraz mo¿e pisaæ tylko jeden pisarz
+ - w biblio mo¿e byæ tylko jeden pisarz
+ - je¿eli w biblio jest pisarz to nie mo¿e byæ czytelników
+ - je¿eli w kolejce jest pisarz to ¿aden czytelnik nie mo¿e wej¶æ zanim pisarz
+   nie zostanie obs³u¿ony
+ - pisarz czeka a¿ wszyscy czytelnicy wyjd± z biblioteki
+ - w bibliotece mo¿e byæ dowolna ilo¶æ czytelników
+
+
+3. Problem golibrody. Mamy zak³ad fryzjerski w którym jest fryzjer. Fryzjer czeka na
+klientów. Je¿eli fryzjer (f) nie ma klientów to ¶pi. Je¿eli przychodzi pierwszy
+klient (k) i widzi, ¿e f ¶pi to go budzi. Je¿eli przychodzi k i widzi, ¿e f obs³uguje
+ju¿ jakiego¶ k to czeka na swoj± kolej (w kolejce). Klienci pisz±, fryzjer czyta.
+Klienci s± w±tkami, które mog± pisaæ. Kolejno¶æ przychodzenia *musi* zostaæ zachowana
+(w przeciwieñstwie do zadania 2 nie ma priorytetów).
