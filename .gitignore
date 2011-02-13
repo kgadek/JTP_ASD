@@ -16,3 +16,4 @@ tags
 *.css
 *.class
 .nfs*
+*.fasl
