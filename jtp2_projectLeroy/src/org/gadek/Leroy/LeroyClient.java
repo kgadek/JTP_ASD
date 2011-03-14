@@ -11,7 +11,7 @@ import java.util.logging.*;
 
 public class LeroyClient {
 	
-	static byte[] serverIp = {(byte) 192, (byte) 168, (byte) 100, (byte) 103};
+	static byte[] serverIp = {(byte) 127, (byte) 0, (byte) 0, (byte) 1};
 	static int serverPort = 7777;
 	static String myName;
 	
@@ -74,7 +74,8 @@ public class LeroyClient {
 					l.interrupt();
 					l.join(1000);
 					break;
-				}
+				} else if(userInput.startsWith("/nickname "))
+					myName = userInput.substring(10);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

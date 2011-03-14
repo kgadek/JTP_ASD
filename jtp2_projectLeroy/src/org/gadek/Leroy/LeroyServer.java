@@ -1,51 +1,11 @@
 package org.gadek.Leroy;
 
-import java.text.*;
 import java.util.*;
 import java.net.*;
 import java.io.*;
 import java.util.Map.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
-
-class Msg {
-	String sender;
-	String msg;
-}
-
-class Session {
-	Msg[] msgs;
-	String date;
-	
-	Session() {
-		date = DateFormat.getDateInstance().format(new Date());
-	}
-	
-	public void setDate(String date) throws ParseException {
-		DateFormat df = DateFormat.getDateInstance();
-		this.date = df.format(df.parse(date)); // konwersja w obie strony -- sprawdzenie, czy poprawny String
-	}
-}
-
-class ArchiveHandler extends DefaultHandler {
-	private Session s = new Session();
-	
-	public void startDocument() throws SAXException {
-		System.out.println("start");
-	}
-	public void endDocument() throws SAXException {
-		System.out.println("end");
-	}
-	public void startElement(String namespaceURI, String localName, String qname, Attributes attr) throws SAXException {
-		System.out.println("startElem: " + localName + " qname:" + qname + " attr:" + attr.toString());
-	}
-	public void endElement(String namespaceURI, String localName, String qname) throws SAXException {
-		System.out.println("endElem");
-	}
-	public void characters(char[] ch, int start, int length) throws SAXException {
-		System.out.println("chars: " + String.copyValueOf(ch) + " st: " + start + " len: " + length);
-	}
-}
 
 public class LeroyServer implements Runnable {
 
@@ -56,7 +16,14 @@ public class LeroyServer implements Runnable {
 	private PrintWriter out;
 	private BufferedReader in;
 	private static ServerSocket serverSocket;
-	private static List<String> msgs = new LinkedList<String>();
+	private static Archive ar;
+	private static Session se;
+	
+	class onShutdown extends Thread {
+		public void run() {
+			System.out.println("BABABABBA");
+		}
+	}
 	
 	public LeroyServer(Socket clientSocket) {
 		this.clientSocket = clientSocket;
@@ -95,15 +62,20 @@ public class LeroyServer implements Runnable {
 			Map.Entry<Thread, LeroyServer> thIt;
 			
 			while(true) {
-				Thread.sleep(1000);
+				Thread.sleep(10);
 				if((inp = in.readLine()) == null)
 					break;
 				if(inp.startsWith("/nickname ")) {
-					nick = inp.substring(10);
-					continue;
+					String tmp = inp.substring(10);
+					inp = "Użytkownik " + nick + " zmienił nazwę na " + tmp;
+					nick = tmp;
 				}
 				System.out.println(clientSocket + " odebrał: " + inp);
 				
+				Msg m = new Msg();
+				m.setMessage(inp);
+				m.setSender(nick);
+				se.addMsg(m);
 				
 				it = threadMap.entrySet().iterator();
 				
@@ -111,13 +83,6 @@ public class LeroyServer implements Runnable {
 					thIt = it.next();
 					thIt.getValue().receiveMsg(nick + "> " + inp);
 				}
-				
-				//sendMsgBroadcast(inp);
-				//System.out.println("--> " + clientSocket + " żyje");
-				/*if(rnd.nextInt(10) < 2) {
-					System.out.println("Th " + threadId + " rzuca!");
-					sendMsgBroadcast(threadId);
-				}*/
 			}
 			
 			in.close();
@@ -134,10 +99,34 @@ public class LeroyServer implements Runnable {
 	public static void main(String[] args) {
 		try {
 			XMLReader xr = XMLReaderFactory.createXMLReader();
-			xr.setContentHandler(new ArchiveHandler());
+			ArchiveHandler ah = new ArchiveHandler();
+			xr.setContentHandler(ah);
 			xr.parse(new InputSource(new FileReader(new File("archive.xml"))));
+			ar = ah.getArchive();
+			se = new Session();
+			//System.out.println(ah.getArchive().toXML());
+			
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					System.out.println("Zapisuję archiwum...");
+					ar.addSession(se);
+					//BufferedWriter fout = new BufferedWriter(new FileOutputStream(new File("archive.xml")));
+					PrintWriter out = null;
+					try {
+						out = new PrintWriter(new BufferedWriter(new FileWriter("archive.xml")));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					out.println(ar.toXML());
+					out.close();
+					System.out.println(ar.toXML());
+					System.out.println("Ok.");
+				}
+			});
+			
 			LeroyServer main = new LeroyServer(null);
 			main.runServer();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (SAXException e) {
