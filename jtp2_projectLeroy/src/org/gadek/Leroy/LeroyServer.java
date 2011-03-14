@@ -1,9 +1,51 @@
 package org.gadek.Leroy;
 
+import java.text.*;
 import java.util.*;
 import java.net.*;
 import java.io.*;
 import java.util.Map.*;
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
+
+class Msg {
+	String sender;
+	String msg;
+}
+
+class Session {
+	Msg[] msgs;
+	String date;
+	
+	Session() {
+		date = DateFormat.getDateInstance().format(new Date());
+	}
+	
+	public void setDate(String date) throws ParseException {
+		DateFormat df = DateFormat.getDateInstance();
+		this.date = df.format(df.parse(date)); // konwersja w obie strony -- sprawdzenie, czy poprawny String
+	}
+}
+
+class ArchiveHandler extends DefaultHandler {
+	private Session s = new Session();
+	
+	public void startDocument() throws SAXException {
+		System.out.println("start");
+	}
+	public void endDocument() throws SAXException {
+		System.out.println("end");
+	}
+	public void startElement(String namespaceURI, String localName, String qname, Attributes attr) throws SAXException {
+		System.out.println("startElem: " + localName + " qname:" + qname + " attr:" + attr.toString());
+	}
+	public void endElement(String namespaceURI, String localName, String qname) throws SAXException {
+		System.out.println("endElem");
+	}
+	public void characters(char[] ch, int start, int length) throws SAXException {
+		System.out.println("chars: " + String.copyValueOf(ch) + " st: " + start + " len: " + length);
+	}
+}
 
 public class LeroyServer implements Runnable {
 
@@ -14,6 +56,7 @@ public class LeroyServer implements Runnable {
 	private PrintWriter out;
 	private BufferedReader in;
 	private static ServerSocket serverSocket;
+	private static List<String> msgs = new LinkedList<String>();
 	
 	public LeroyServer(Socket clientSocket) {
 		this.clientSocket = clientSocket;
@@ -61,6 +104,7 @@ public class LeroyServer implements Runnable {
 				}
 				System.out.println(clientSocket + " odebrał: " + inp);
 				
+				
 				it = threadMap.entrySet().iterator();
 				
 				while(it.hasNext()) {
@@ -89,9 +133,14 @@ public class LeroyServer implements Runnable {
 
 	public static void main(String[] args) {
 		try {
+			XMLReader xr = XMLReaderFactory.createXMLReader();
+			xr.setContentHandler(new ArchiveHandler());
+			xr.parse(new InputSource(new FileReader(new File("archive.xml"))));
 			LeroyServer main = new LeroyServer(null);
 			main.runServer();
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
 			e.printStackTrace();
 		}
 	}
